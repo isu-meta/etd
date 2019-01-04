@@ -1,7 +1,7 @@
 # -*- encoding: iso-8859-1 -*-
 import os
 import pandas as pd
-from metabeqc import *
+from etdcode.metabeqc import *
 
 # Set your paths
 pdf_reader = 'C:\\Program Files (x86)\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe'

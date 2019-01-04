@@ -21,7 +21,7 @@ from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
-from regreplace import RegexpReplacer
+from etdcode.regreplace import RegexpReplacer
 
 # Code for RegexpReplacer found in NLTK Cookbook - used for replacing "one-off" majors
 RegexpReplacer= RegexpReplacer()
