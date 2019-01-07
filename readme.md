@@ -42,6 +42,8 @@ From your anaconda environment.
 $ python workflow.py
 ```
 
+Results will appear in the output directory mentioned above.
+
 Other Institutions
 -------------------
 
