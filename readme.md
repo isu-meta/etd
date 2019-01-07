@@ -21,6 +21,7 @@ Clone the repository and create an anaconda2 environment.
 $ git clone https://github.com/wryan14/etd.git
 $ cd etd
 $ conda create -n "etd_env" python=2.7
+$ activate etd_env
 $ pip install -r requirements.txt
 ```
 
@@ -35,11 +36,8 @@ Update paths in [workflow.py](workflow.py)
 
 ### Run
 
-From the anaconda prompt.
-
 ``` {.sourceCode .console}
-(base) C:\etd> activate etd_env
-(etd_env) C:\etd> python workflow.py
+$ python workflow.py
 ```
 
 Other Institutions
