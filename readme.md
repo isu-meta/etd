@@ -26,7 +26,7 @@ $ pip install -r requirements.txt
 
 #### Set Up
 
-1.  Update paths in *workflow.py*
+1.  Update paths in [workflow.py](workflow.py)
 
 | Variable Name | Description                      |
 |---------------|----------------------------------|
@@ -34,7 +34,7 @@ $ pip install -r requirements.txt
 | path          | Path to a blank output directory |
 | pq_path       | Path to proquest .zip files      |
 
-2.  Modify ETD-ProQuestXML2bepressXML-2017.xsl as desired. For Non-ISU
+2.  Modify [ETD-ProQuestXML2bepressXML-2017.xsl](Sup/ETD-ProQuestXML2bepressXML-2017.xsl) as desired. For Non-ISU
     institutions, this means changing the fulltext-url target path.
 
 ``` {.sourceCode .xml}
@@ -50,6 +50,8 @@ $ pip install -r requirements.txt
     ListofMajors.csv.
 
 ### Run
+
+From the anaconda prompt.
 
 ``` {.sourceCode .console}
 (base) C:\etd> activate etd_env
