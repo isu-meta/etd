@@ -28,9 +28,11 @@ $ pip install -r requirements.txt
 
 1.  Update paths in *workflow.py*
 
-| Variable Name | Description | ----------------------------------| |
-pdf\_reader | Path to Adobe or similar reader | | path | Path to a blank
-output directory | | pq\_path | Path to proquest .zip files |
+| Variable Name | Description                      |
+|---------------|----------------------------------|
+| pdf_reader    | Path to Adobe or similar reader  |
+| path          | Path to a blank output directory |
+| pq_path       | Path to proquest .zip files      |
 
 2.  Modify ETD-ProQuestXML2bepressXML-2017.xsl as desired. For Non-ISU
     institutions, this means changing the fulltext-url target path.
