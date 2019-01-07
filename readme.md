@@ -24,9 +24,7 @@ $ conda create -n "etd_env" python=2.7
 $ pip install -r requirements.txt
 ```
 
-#### Set Up
-
-1.  Update paths in [workflow.py](workflow.py)
+Update paths in [workflow.py](workflow.py)
 
 | Variable Name | Description                      |
 |---------------|----------------------------------|
@@ -34,8 +32,20 @@ $ pip install -r requirements.txt
 | path          | Path to a blank output directory |
 | pq_path       | Path to proquest .zip files      |
 
-2.  Modify [ETD-ProQuestXML2bepressXML-2017.xsl](Sup/ETD-ProQuestXML2bepressXML-2017.xsl) as desired. For Non-ISU
-    institutions, this means changing the fulltext-url target path.
+
+### Run
+
+From the anaconda prompt.
+
+``` {.sourceCode .console}
+(base) C:\etd> activate etd_env
+(etd_env) C:\etd> python workflow.py
+```
+
+Other Institutions
+-------------------
+
+Non-ISU institutions will need to change the fulltext-url path in [ETD-ProQuestXML2bepressXML-2017.xsl](Sup/ETD-ProQuestXML2bepressXML-2017.xsl).
 
 ``` {.sourceCode .xml}
 <fulltext-url>
@@ -46,14 +56,4 @@ $ pip install -r requirements.txt
 </fulltext-url>
 ```
 
-3.  Confirm Sup files are appropriate. Non-ISU institutions can replace
-    ListofMajors.csv.
-
-### Run
-
-From the anaconda prompt.
-
-``` {.sourceCode .console}
-(base) C:\etd> activate etd_env
-(etd_env) C:\etd> python workflow.py
-```
+A new [ListofMajors.csv](Sup/ListofMajors.csv) will also need to be included.
