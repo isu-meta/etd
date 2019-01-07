@@ -36,6 +36,8 @@ Update paths in [workflow.py](workflow.py)
 
 ### Run
 
+From your anaconda environment.
+
 ``` {.sourceCode .console}
 $ python workflow.py
 ```
