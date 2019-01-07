@@ -1,11 +1,10 @@
-from metabeqc import *
-import os
+from etdcode.metabeqc import *
 
 # This code uses only the merge feature, which is useful for Embargoes that have already been Qc'd
-path = 'D:\\Users\\rwolfsla\\Desktop\\process\\Temp_Upload'
+path = 'C:\\Users\\rwolfsla\\Desktop\\Temp_Upload'
 py_code = os.getcwd()
 
-inpath = r'D:\Users\rwolfsla\Desktop\process\Temp_Upload\XML'
+inpath = path + r'\XML'
 fileinpath = os.listdir(inpath)[0]
 newinpath = inpath + "\\" + fileinpath
 

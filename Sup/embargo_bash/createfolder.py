@@ -18,6 +18,6 @@ files2create = (set(li))
 path = os.getcwd()
 
 try:
-    [os.mkdir("D:\\Users\\rwolfsla\\Desktop\\process\\ETD_TEST\\test\\"+x) for x in files2create]
-except Exception:
-    print("Exception")
+    [os.mkdir("C:\\Users\\rwolfsla\\Desktop\\ETD_TEST\\embargo_store\\"+x) for x in files2create]
+except Exception as e:
+    print(e)

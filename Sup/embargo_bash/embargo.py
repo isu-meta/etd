@@ -10,6 +10,5 @@ for line in lines:
     date = str(Y).split('/')
     s = '{}-{}'
     target = s.format(date[2], date[0])
-    source = 'mv /mnt/d/Users/rwolfsla/Desktop/process/ETD_TEST/Embargo/*/{}* /mnt/d/Users/rwolfsla/Desktop/process/ETD_TEST/test/{}'.format(F,target)
+    source = 'mv /mnt/c/Users/rwolfsla/Desktop/ETD_TEST/Embargo/*/{}* /mnt/c/Users/rwolfsla/Desktop/ETD_TEST/embargo_store/{}'.format(F,target)
     bash_command(source)
-
