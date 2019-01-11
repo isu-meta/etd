@@ -59,3 +59,8 @@ Non-ISU institutions will need to change the fulltext-url path in [ETD-ProQuestX
 ```
 
 A new [ListofMajors.csv](Sup/ListofMajors.csv) will also need to be included.
+
+Documentation
+--------------
+
+https://mddocs.readthedocs.io/en/latest/theses.html#etds
