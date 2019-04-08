@@ -1,10 +1,12 @@
-from etdcode.metabeqc import *
+import os
+
+from etdcode.metabeqc import roottag, SortDocuments, xmltransform
 
 # This code uses only the merge feature, which is useful for Embargoes that have already been Qc'd
-path = 'C:\\Users\\rwolfsla\\Desktop\\Temp_Upload'
+path = 'C:\\Users\\wteal\\Projects\\Temp_Upload'
 py_code = os.getcwd()
 
-inpath = path + r'\XML'
+inpath = path + r'\\XML'
 fileinpath = os.listdir(inpath)[0]
 newinpath = inpath + "\\" + fileinpath
 

@@ -7,11 +7,11 @@ from etdcode.metabeqc import *
 pdf_reader = 'C:\\Program Files (x86)\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe'
 
 py_code = os.getcwd()
-pq_path = os.path.join(py_code,'Sup\\test_docs')
-path = 'C:\\Users\\rwolfsla\\Desktop\\ETD_TEST'
+pq_path = "Y:\\Scholarly Publishing Services\\DR Projects\\proquest_etd\\r20190117"
+path = 'C:\\Users\\wteal\\Projects\\etd\\OUTPUT'
 
 # Uncomment next line to unzip
-unzip(pq_path, path)
+#unzip(pq_path, path)
 
 # Change python's OS path to working folder
 os.chdir(path)
@@ -20,17 +20,17 @@ os.chdir(path)
 # folders now includes XML, PDF, and any multimedia
 SD = SortDocuments(path)
 SD.pdfpath = path + "\\PDF\\"
-try:
+"""try:
     SD.makefolders()
 except Exception:
     pass
 try:
     SD.sort()
 except Exception:
-    pass
+    pass"""
 
 # Transform ProQuest Metadata to BePress
-proquest2bepress(py_code, path)
+#proquest2bepress(py_code, path)
 
 # Declare fields for error report
 names = []
@@ -44,7 +44,7 @@ embargoname = []
 # Initiate for-loop to create document objects
 # XML-Transformed is the folder generated from proquest2bepress() method
 
-for file in glob.glob(path + '\\XML-Transformed\\*.xml'):
+for file in glob.glob(path + '\\XML-Transformed\\*.xml')[27:]:
     # Create BePress xml Object
     BP = BePress(file)
     be_name = BP.xmlname()
@@ -81,7 +81,7 @@ for file in glob.glob(path + '\\XML-Transformed\\*.xml'):
     vtitle.validatetitle()
     trs = vtitle.titleresolve()
     if trs is not None:
-        chng = raw_input('Commit change to BePress XML? [y|n]')
+        chng = input('Commit change to BePress XML? [y|n]')
         if chng == 'y' or chng == 'Y':
             BP.chtitle(trs)
             BP.committitle()
@@ -98,7 +98,7 @@ for file in glob.glob(path + '\\XML-Transformed\\*.xml'):
     vauthor.validateauthor(fname, mname, lname, be_author)
     ars = vauthor.authorresolve(fname, mname, lname)
     if ars is not None:
-        chng = raw_input('Commit change to BePress XML? [y|n]')
+        chng = input('Commit change to BePress XML? [y|n]')
         if chng == 'y' or chng == 'Y':
             BP.chfname(ars[0])
             BP.chmname(ars[1])

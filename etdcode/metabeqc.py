@@ -10,7 +10,7 @@ import subprocess
 import unicodedata
 import zipfile
 import time
-from cStringIO import StringIO
+from io import StringIO
 
 import lxml.etree as ET
 from dateutil import parser
@@ -62,7 +62,7 @@ class BePress(object):
         self.lname = lname[0].text
         self.mname = mname[0].text
         self.fname = fname[0].text
-        self.author = " ".join(filter(None, [self.fname, self.mname, self.lname]))
+        self.author = " ".join([_f for _f in [self.fname, self.mname, self.lname] if _f])
         return (self.author)
 
     # ---------------------------------
@@ -73,7 +73,7 @@ class BePress(object):
         return self.title
 
     def getauthor(self):
-        self.author = " ".join(filter(None, [self.fname, self.mname, self.lname]))
+        self.author = " ".join([_f for _f in [self.fname, self.mname, self.lname] if _f])
         return (self.author)
 
     # --------------------------------
@@ -206,17 +206,17 @@ class BePress(object):
 # Replacing Error with Desired Value
 def lazy_encode(text):
     try:
-        regreplace = re.sub(ur'\u201c', '"', text)
-        regreplace2 = re.sub(ur'\u201d', '"', regreplace)
-        regreplace3 = re.sub(ur'\u2019', "'", regreplace2)
-        regreplace4 = re.sub(ur'\u2018', "'", regreplace3)
-        regreplace5 = re.sub(ur'\u2212', "-", regreplace4)
-        regreplace6 = re.sub(ur'\u03b2', 'b', regreplace5)
-        regreplace7 = re.sub(ur'\u2013', '-', regreplace6)
-        regreplace8 = re.sub(ur'\u03b3', '(&#947)', regreplace7)
-        regreplace9 = re.sub(ur'\u0301', "'", regreplace8)
-        regreplace10 = re.sub(ur'\u0306', "g", regreplace9)
-        regreplace11 = re.sub(ur'\u0131', 'i', regreplace10)
+        regreplace = re.sub(r'\u201c', '"', text)
+        regreplace2 = re.sub(r'\u201d', '"', regreplace)
+        regreplace3 = re.sub(r'\u2019', "'", regreplace2)
+        regreplace4 = re.sub(r'\u2018', "'", regreplace3)
+        regreplace5 = re.sub(r'\u2212', "-", regreplace4)
+        regreplace6 = re.sub(r'\u03b2', 'b', regreplace5)
+        regreplace7 = re.sub(r'\u2013', '-', regreplace6)
+        regreplace8 = re.sub(r'\u03b3', '(&#947)', regreplace7)
+        regreplace9 = re.sub(r'\u0301', "'", regreplace8)
+        regreplace10 = re.sub(r'\u0306', "g", regreplace9)
+        regreplace11 = re.sub(r'\u0131', 'i', regreplace10)
         ret1999 = regreplace11.encode('iso-8859-1')
         return ret1999
     except UnicodeEncodeError:
@@ -523,23 +523,23 @@ class PDFPress(object):
                 return self.major
             else:
                 while complete == False:
-                    print'----------------------------------------------------------------------------------------------'
-                    print '--Unauthorized Major-------------------------------------------------------------------------'
-                    print '-------------------------------------------------------------------------------'
+                    print('----------------------------------------------------------------------------------------------')
+                    print('--Unauthorized Major-------------------------------------------------------------------------')
+                    print('-------------------------------------------------------------------------------')
                     FNULL = open(os.devnull, 'w')
                     self.doc = subprocess.Popen("%s %s" % (self.reader, self.path), stdout=FNULL,
                                                 stderr=subprocess.STDOUT)
-                    print "Unauthroized Result= " + self.major
+                    print("Unauthroized Result= " + self.major)
                     try:
-                        print "Match[1]: " + str(suggested_matches[0])
-                        print "Match[2]: " + str(suggested_matches[1])
-                        print "Match[3]: " + str(suggested_matches[2])
+                        print("Match[1]: " + str(suggested_matches[0]))
+                        print("Match[2]: " + str(suggested_matches[1]))
+                        print("Match[3]: " + str(suggested_matches[2]))
                     except TypeError:
-                        print TypeError
-                        print key
-                    review = raw_input("Is there more than one major? [y|n]: ")
+                        print(TypeError)
+                        print(key)
+                    review = input("Is there more than one major? [y|n]: ")
                     if review == 'y' or review == 'Y':
-                        major1 = raw_input('First Major: ')
+                        major1 = input('First Major: ')
                         if major1 == '1':
                             self.major1 = str(*key)
                         elif major1 == '2':
@@ -548,7 +548,7 @@ class PDFPress(object):
                             self.major1 = str(*suggested_matches[2][0])
                         else:
                             self.major1 = major1
-                        major2 = raw_input('Second Major: ')
+                        major2 = input('Second Major: ')
                         if major2 == '1':
                             self.major2 = str(*key)
                         elif major2 == '2':
@@ -559,7 +559,7 @@ class PDFPress(object):
                             self.major2 = major2
                         print(self.major1)
                         print(self.major2)
-                        confirm = raw_input('CORRECT? [y|n]')
+                        confirm = input('CORRECT? [y|n]')
                         if confirm == 'y' or confirm == 'Y':
                             confirm = True
                             self.doc.kill()
@@ -568,7 +568,7 @@ class PDFPress(object):
                         else:
                             continue
                     else:
-                        major = raw_input("Enter major: ")
+                        major = input("Enter major: ")
                         if major == '1':
                             self.major = str(*key)
                         elif major == '2':
@@ -577,8 +577,8 @@ class PDFPress(object):
                             self.major = str(*suggested_matches[2][0])
                         else:
                             self.major = major
-                        print self.major
-                        confirm = raw_input('CORRECT? [y|n]')
+                        print(self.major)
+                        confirm = input('CORRECT? [y|n]')
                         if confirm == 'y' or confirm == 'Y':
                             self.doc.kill()
                             time.sleep(1)
@@ -670,28 +670,27 @@ class SortDocuments(object):
                 try:
                     shutil.move(self.path + "\\PDF\\" + pdffile, self.path + "\\Embargo")
                 except shutil.Error:
-                    print ("ERROR moving to embargo folder:")
-                    print file
+                    print("ERROR moving to embargo folder:")
+                    print(file)
                     pass
                 except WindowsError:
                     print("ERROR moving to embargo folder:")
-                    print file
+                    print(file)
                     pass
                 try:
                     shutil.move(file, self.path + "\\Embargo")
                 except shutil.Error:
-                    print ("ERROR moving to embargo folder:")
-                    print file
+                    print("ERROR moving to embargo folder:")
+                    print(file)
                     pass
                 except WindowsError:
                     print("Error moving to embargo folder:")
-                    print file
+                    print(file)
             else:
                 return "None"
         except ValueError:
-            print ("ERROR moving to embargo folder:")
-            print file
-            pass
+            print("ERROR moving to embargo folder:")
+            print(file)
 
 
 # ----------------------------------------------------------------------------------------------------------------------------
@@ -858,12 +857,12 @@ class Validate(object):
 
     def titleresolve(self):
         if self.valid == False:
-            print'---------------------------------------------------------------------------------------------------'
-            print "TITLE Needs Validated::"
+            print('---------------------------------------------------------------------------------------------------')
+            print("TITLE needs to be validated: ")
             # y = raw_input(
             #   "-----------------------------------------Open PDF? [y|n] ----------------------------------------- ")
             # Uncomment above section to provide choice of opening PDF
-            print ('--------------------------------------------------------------------------------------------------')
+            print('--------------------------------------------------------------------------------------------------')
             y = 'Y'
             if y == 'y' or y == 'Y':
                 FNULL = open(os.devnull, 'w')
@@ -874,10 +873,10 @@ class Validate(object):
             cont = True
             self.cor = "n/a"
             while cont == True:
-                print "---XML Field [1]: " + self.xml
-                print "---PDF Field [2]: " + self.pdf
-                print "---Your Field: " + self.cor
-                var = raw_input("Enter your correction: ")
+                print("---XML Field [1]: " + self.xml)
+                print("---PDF Field [2]: " + self.pdf)
+                print("---Your Field: " + self.cor)
+                var = input("Enter your correction: ")
                 if var == '1':
                     self.cor = self.xml
                 elif var == '2':
@@ -886,7 +885,7 @@ class Validate(object):
                     self.cor = var
 
                 print(self.cor)
-                correction = raw_input('Are you happy with this change? [y|n]')
+                correction = input('Are you happy with this change? [y|n]')
                 if correction == 'y' or correction == 'Y':
                     cont = False
                     if self.cor == self.xml:
@@ -922,8 +921,8 @@ class Validate(object):
                 self.lname = str(lname)
             except UnicodeEncodeError:
                 self.lname = 'ERROR'
-            print "------------------------------------------------------------------------------------------------"
-            print("AUTHOR Needs Validated:")
+            print("------------------------------------------------------------------------------------------------")
+            print("AUTHOR needs to be validated: ")
             # y = raw_input(
             #    "-----------------------------------------Open PDF? [y|n] ----------------------------------------- ")
             # Uncomment above to provide option for opening PDF
@@ -937,14 +936,14 @@ class Validate(object):
                 pass
             cont = True
             while cont == True:
-                print "-XML--FirstName[1]: " + self.fname
-                print"-XML--MiddleName[2]: " + self.mname
-                print"-XML--LastName [3]: " + self.lname
-                print"-PDF--FullName: " + self.pdf
-                print"------------------------------------------------"
-                fname = raw_input("FirstName: ")
-                mname = raw_input("MiddleName: ")
-                lname = raw_input("LastName: ")
+                print("-XML--FirstName[1]: " + self.fname)
+                print("-XML--MiddleName[2]: " + self.mname)
+                print("-XML--LastName [3]: " + self.lname)
+                print("-PDF--FullName: " + self.pdf)
+                print("------------------------------------------------")
+                fname = input("FirstName: ")
+                mname = input("MiddleName: ")
+                lname = input("LastName: ")
                 if fname == '1':
                     self.fname = self.fname
                 elif fname == '2':
@@ -976,9 +975,9 @@ class Validate(object):
                 else:
                     self.lname = lname
 
-                print (self.fname, self.mname, self.lname)
+                print(self.fname, self.mname, self.lname)
 
-                correction = raw_input('Are you happy with this change? [y|n]')
+                correction = input('Are you happy with this change? [y|n]')
                 if correction == 'y' or correction == 'Y':
                     self.doc.kill()
                     time.sleep(1)
