@@ -1,5 +1,6 @@
 # -*- encoding: iso-8859-1 -*-
 import os
+import os.path
 import pandas as pd
 from etdcode.metabeqc import *
 
@@ -19,9 +20,8 @@ os.chdir(path)
 # Create sort object
 # folders now includes XML, PDF, and any multimedia
 SD = SortDocuments(path)
-SD.pdfpath = path + "\\PDF\\"
 """try:
-    SD.makefolders()
+    SD.make_folders()
 except Exception:
     pass
 try:
@@ -53,9 +53,8 @@ for file in glob.glob(path + '\\XML-Transformed\\*.xml')[27:]:
     be_title = BP.xmltitle()
 
     # Create PDF title page Object
-    pdf_file = chext(file, '.xml', '.pdf')
-    pdf_path_file = SD.pdfpath + "\\" + pdf_file
-    PDP = PDFPress(pdf_path_file, pdf_reader)
+    pdf_file = os.path.join(SD.pdf_path, chext(file, '.xml', '.pdf'))
+    PDP = PDFPress(pdf_file, pdf_reader)
     # These codes format pdf extracted text
     PDP.genfile()
     PDP.genlines()
@@ -74,9 +73,9 @@ for file in glob.glob(path + '\\XML-Transformed\\*.xml')[27:]:
     # Now we need to validate the title
     PDP.validatekeyword(be_title, title=True, author=False)
     try:
-        vtitle = Validate(BP.title, PDP.pdftitle, pdf_path_file, pdf_reader)
+        vtitle = Validate(BP.title, PDP.pdftitle, pdf_file, pdf_reader)
     except AttributeError:
-        vtitle=Validate(BP.title,pdfitem="Error",pdfpath=pdf_path_file, pdfreader=pdf_reader)
+        vtitle=Validate(BP.title,pdfitem="Error",pdfpath=pdf_file, pdfreader=pdf_reader)
 
     vtitle.validatetitle()
     trs = vtitle.titleresolve()
@@ -94,7 +93,7 @@ for file in glob.glob(path + '\\XML-Transformed\\*.xml')[27:]:
     fname = BP.fname
     mname = BP.mname
     lname = BP.lname
-    vauthor = Validate(BP.author, PDP.pdfauthor, pdf_path_file, pdf_reader)
+    vauthor = Validate(BP.author, PDP.pdfauthor, pdf_file, pdf_reader)
     vauthor.validateauthor(fname, mname, lname, be_author)
     ars = vauthor.authorresolve(fname, mname, lname)
     if ars is not None:
@@ -126,8 +125,8 @@ for file in glob.glob(path + '\\XML-Transformed\\*.xml')[27:]:
     # find and move Files with upcoming embargo dates
     ed = BP.xmlfield('embargo_date')
     edtitle = os.path.basename(file)
-    embv = SD.findembargo(file, ed, pdf_file)
-    if embv != 'None':
+    embv = SD.find_embargo(file, pdf_file, ed)
+    if embv != "":
         embargodate.append(ed)
         embargoname.append(edtitle)
     else:
@@ -156,8 +155,3 @@ merge = py_code + '\\Sup\\merge.xsl'
 
 xmltransform(newinpath, merge, outpath)
 roottag(path + '\\outfile.xml')
-
-# sort embargod docs
-embargo_path = path + "\\Embargo"
-emb = SortDocuments(embargo_path)
-emb.sort()

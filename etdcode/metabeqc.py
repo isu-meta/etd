@@ -1,4 +1,4 @@
-# -*- encoding: iso-8859-1 -*-
+# -*- encoding: utf-8 -*-
 import csv
 import datetime
 import glob
@@ -24,7 +24,7 @@ from pdfminer.pdfpage import PDFPage
 from etdcode.regreplace import RegexpReplacer
 
 # Code for RegexpReplacer found in NLTK Cookbook - used for replacing "one-off" majors
-RegexpReplacer= RegexpReplacer()
+RegexpReplacer = RegexpReplacer()
 
 class BePress(object):
     """
@@ -616,15 +616,100 @@ def convert(fname, pages=None):
 class SortDocuments(object):
     """
     Designed to separate .pdf and .xml files into seperate folders
-    Two Methods:
-    1.makefolders: if folders XML and PDF do not exist, create folders
-    2.sort: sorts and moves files to corresponding folder
+    Methods:
+        find_embargo: identify and move embargoed files to Embargo folder
+        _handle_embargo_error
+        _make_embargo_dir: 
+        make_folders: if folders XML and PDF do not exist, create folders
+        sort: sorts and moves files to corresponding folder
     """
 
     def __init__(self, path):
         self.path = path
+        self.xml_path = str(self.path + 'XML')
+        self.pdf_path = str(self.path + 'PDF')
+        self.multi_path = str(self.path + 'MultiMedia')
+        self.embargo_path = str(self.path + 'Embargo')
 
-    def makefolders(self):
+    def find_embargo(self, xml_file, pdf_file, embargo_date):
+        """Determines if a document is embargoed and moves it if needed.
+
+        Determines if a document is still under embargo. If it is it
+        moves it to the appropriate embargo directory, creating it if
+        necessary.
+
+        Parameters
+        ----------
+        xml_file : str
+            Path to the XML file.
+        pdf_file : str
+            Path the the PDF file.
+        embargo_date : str
+            Date in the format YYYY-MM-DD, i.e. 2018-04-10.
+        
+        Returns
+        -------
+        str
+            The path for the embargo directory or an empty string.
+        """
+        try:
+            today = datetime.date.today().strftime('%Y-%m-%d')
+            embargo_date_parsed = parser.parse(embargo_date)
+            today_parsed = parser.parse(today)
+            if embargo_date_parsed > today_parsed:
+                save_path = self._make_embargo_dir(embargo_date[:-3])
+
+                try:
+                    shutil.move(pdf_file, save_path)
+                except (shutil.Error, WindowsError):
+                    return self._handle_embargo_error(pdf_file, embargo_date)
+
+                try:
+                    shutil.move(xml_file, save_path)
+                except (shutil.Error, WindowsError):
+                    return self._handle_embargo_error(xml_file, embargo_date)
+
+                return embargo_date
+
+            else:
+                return ""
+
+        except ValueError:
+            return self._handle_embargo_error(xml_file, embargo_date)
+
+    def _handle_embargo_error(self, file_path, embargo_date):
+        """A little function to remove repetative code in find_embargo except
+        clauses."""
+        
+        print("ERROR moving to embargo folder:")
+        print(file_path)
+
+        return embargo_date
+    
+    def _make_embargo_dir(self, embargo_year_month):
+        """Create a directory for embargoed files.
+
+        Create a directory for an embargoed file with a name format like
+        2018-04 unless the directory already exists.
+
+        Parameters
+        ----------
+        embargo_year_month : str
+            A string in the format YYYY-MM, i.e. 2018-04.
+
+        Returns
+        -------
+        str
+            The path for the embargo directory.
+        """
+        new_dir_path = os.path.join(self.embargo_path, embargo_year_month)
+
+        if not os.path.exists(new_dir_path):
+            os.makedirs(new_dir_path)
+
+        return new_dir_path
+        
+    def make_folders(self):
         path = ('XML')
         if not os.path.exists(path):
             os.makedirs(path)
@@ -637,67 +722,28 @@ class SortDocuments(object):
         path4 = ('Embargo')
         if not os.path.exists(path4):
             os.makedirs(path4)
-        path5 = 'Embargo\\XML'
-        if not os.path.exists(path5):
-            os.makedirs(path5)
-        path6 = 'Embargo\\PDF'
-        if not os.path.exists(path6):
-            os.makedirs(path6)
 
     def sort(self):
-        self.xmlpath = str(self.path + '\XML')
-        self.pdfpath = str(self.path + '\PDF')
-        self.multipath = str(self.path + '\MultiMedia')
-        self.embargo = str(self.path + '\Embargo')
         for file in glob.glob(str(self.path) + "\*.pdf"):
             shutil.move(file, self.pdfpath)
             self.pdfpath = str(self.path + '\PDF')
         for file in glob.glob(str(self.path) + "\*.xml"):
-            shutil.move(file, self.xmlpath)
+            shutil.move(file, self.xml_path)
         for file in glob.glob(str(self.path) + "\\*"):
             if file != self.pdfpath \
-                    and file != self.xmlpath \
-                    and file != self.multipath \
-                    and file != self.embargo:
-                shutil.move(file, self.multipath)
+                    and file != self.xml_path \
+                    and file != self.multi_path \
+                    and file != self.embargo_path:
+                shutil.move(file, self.multi_path)
 
-    def findembargo(self, file, embargo, pdffile):
-        try:
-            today = datetime.date.today().strftime('%Y-%m-%d')
-            parsed1 = parser.parse(embargo)
-            parsed2 = parser.parse(today)
-            if parsed1 > parsed2:
-                try:
-                    shutil.move(self.path + "\\PDF\\" + pdffile, self.path + "\\Embargo")
-                except shutil.Error:
-                    print("ERROR moving to embargo folder:")
-                    print(file)
-                    pass
-                except WindowsError:
-                    print("ERROR moving to embargo folder:")
-                    print(file)
-                    pass
-                try:
-                    shutil.move(file, self.path + "\\Embargo")
-                except shutil.Error:
-                    print("ERROR moving to embargo folder:")
-                    print(file)
-                    pass
-                except WindowsError:
-                    print("Error moving to embargo folder:")
-                    print(file)
-            else:
-                return "None"
-        except ValueError:
-            print("ERROR moving to embargo folder:")
-            print(file)
 
 
 # ----------------------------------------------------------------------------------------------------------------------------
-# This function creates a command line subprocess for python to run saxon. You must have saxon installed.
-# We are currently running Saxon HE, which is an open source xslt processor, and uses a .Net framework.
-# This method can replicated using an oXygen transformation scenario, if that is more familiar
+
 def xmltransform(infile, xslt, outfile):
+    """This function creates a command line subprocess for python to run saxon. You must have saxon installed.
+    We are currently running Saxon HE, which is an open source xslt processor, and uses a .Net framework.
+    This method can replicated using an oXygen transformation scenario, if that is more familiar."""
     subprocess.call('Transform -s:' + infile + " " + '-xsl:' + xslt + " " + '-o:' + outfile)
 
 
