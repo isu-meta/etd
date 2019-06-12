@@ -759,19 +759,32 @@ def roottag(file):
     tree.write(file, xml_declaration=True, encoding='iso-8859-1', method='xml')
 
 
-def proquest2bepress(py_path, currentpath):
-    fold = ('XML-Transformed')
-    if not os.path.exists(fold):
-        os.makedirs(fold)
+def proquest2bepress(py_path, output_path):
+    """Process Proquest XML.
+    Parameters
+    ----------
+    py_path : str
+        The path to the directory containing the 
+        base ETD-processing Python/XSLT code.
+    output_path : str
+        The path to the output directory for
+        processed XML, PDF, and media files.
+    Returns
+    -------
+    None
+    """
+    folder = "XML-Transformed"
+    if not os.path.exists(folder):
+        os.makedirs(folder)
 
     # define premises for transformation
-    pq_infile = currentpath + '\\XML'
-    xslt_script = py_path + '\\Sup\\ETD-ProQuestXML2bepressXML-2017.xsl'
-    be_outfile = currentpath + '\\XML-Transformed'
+    pq_infile = os.path.join(output_path, "XML")
+    xslt_script = os.path.join(output_path, "Sup/ETD-ProQuestXML2bepressXML-2017.xsl")
+    be_outfile = os.path.join(output_path, "XML-Transformed")
 
-    for file in glob.glob(pq_infile + '\\*.xml'):
+    for file in glob.glob(os.path.join(pq_infile, "*.xml")):
         base = xmlrename(file)
-        out = be_outfile + "\\" + base + '-out.xml'
+        out = os.path.join(be_outfile, "".join([base, "-out.xml"]))
         xmltransform(file, xslt_script, out)
 
 
@@ -780,7 +793,7 @@ def proquest2bepress(py_path, currentpath):
 # Designed for more basic os needs within the workflow
 
 def unzip(location, path):
-    for file in glob.glob(str(location) + '\*'):
+    for file in glob.glob(os.path.join(location, "*")):
         zip_ref = zipfile.ZipFile(file, 'r')
         zip_ref.extractall(path)
         zip_ref.close()
