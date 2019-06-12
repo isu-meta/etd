@@ -1,18 +1,18 @@
-# -*- encoding: iso-8859-1 -*-
+# -*- encoding: utf-8 -*-
+import glob
 import os
 import os.path
+
 import pandas as pd
-from etdcode.metabeqc import *
+
+from etdcode.metabeqc import BePress, chext, lazy_encode, PDFPress, proquest2bepress, roottag, SortDocuments, Validate, xmltransform
 
 # Set your paths
 pdf_reader = 'C:\\Program Files (x86)\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe'
 
 py_code = os.getcwd()
-pq_path = "Y:\\Scholarly Publishing Services\\DR Projects\\proquest_etd\\r20190117"
+pq_path = "Y:\\Scholarly Publishing Services\\DR Projects\\proquest_etd\\r20190607"
 path = 'C:\\Users\\wteal\\Projects\\etd\\OUTPUT'
-
-# Uncomment next line to unzip
-#unzip(pq_path, path)
 
 # Change python's OS path to working folder
 os.chdir(path)
@@ -20,17 +20,13 @@ os.chdir(path)
 # Create sort object
 # folders now includes XML, PDF, and any multimedia
 SD = SortDocuments(path)
-"""try:
-    SD.make_folders()
-except Exception:
-    pass
-try:
-    SD.sort()
-except Exception:
-    pass"""
+
+# Unzip Proquest files and move them
+# to the working directory
+SD.set_up_proquest_files(pq_path)
 
 # Transform ProQuest Metadata to BePress
-#proquest2bepress(py_code, path)
+proquest2bepress(py_code, path)
 
 # Declare fields for error report
 names = []
@@ -59,23 +55,19 @@ for file in glob.glob(path + '\\XML-Transformed\\*.xml')[27:]:
     PDP.genfile()
     PDP.genlines()
 
-    # Now we need to find the major, this will probably pring some documents for manual review
+    # Now we need to find the major, this will probably bring some documents for manual review
     PDP.findmajor()
     authority = py_code + '\\Sup\\ListofMajors.csv'
-    x = (PDP.reconcilemajor(authority))
+    major = PDP.reconcilemajor(authority)
     # Need a better solution to sorting documents with more than one major
 
-    # -----------------------------------------------------------------------------------------------------------------------
-    # uncomment to add major for the first time. Proceed with caution, this will cause duplicates if run more than once.
-
-    BP.set_and_commitmajor(x)
-    # ------------------------------------------------------------------------------------------------------------------------
+    BP.set_and_commitmajor(major)
     # Now we need to validate the title
     PDP.validatekeyword(be_title, title=True, author=False)
     try:
         vtitle = Validate(BP.title, PDP.pdftitle, pdf_file, pdf_reader)
     except AttributeError:
-        vtitle=Validate(BP.title,pdfitem="Error",pdfpath=pdf_file, pdfreader=pdf_reader)
+        vtitle = Validate(BP.title,pdfitem="Error",pdfpath=pdf_file, pdfreader=pdf_reader)
 
     vtitle.validatetitle()
     trs = vtitle.titleresolve()
@@ -123,7 +115,7 @@ for file in glob.glob(path + '\\XML-Transformed\\*.xml')[27:]:
         pass
 
     # find and move Files with upcoming embargo dates
-    ed = BP.xmlfield('embargo_date')
+    ed = BP.get_field_value_text('embargo_date')
     edtitle = os.path.basename(file)
     embv = SD.find_embargo(file, pdf_file, ed)
     if embv != "":

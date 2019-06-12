@@ -2,17 +2,16 @@
 import csv
 import datetime
 import glob
+from io import StringIO
 import os
 import os.path
 import re
 import shutil
 import subprocess
+import time
 import unicodedata
 import zipfile
-import time
-from io import StringIO
 
-import lxml.etree as ET
 from dateutil import parser
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
@@ -21,6 +20,7 @@ from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
+
 from etdcode.regreplace import RegexpReplacer
 
 # Code for RegexpReplacer found in NLTK Cookbook - used for replacing "one-off" majors
@@ -33,9 +33,9 @@ class BePress(object):
      2. getname, getitle, getauthor: returns current
      3. chtitle / ch[]name: edit object's title or name
      4. commit methods: any method using described by 'commit' will write object field to xml
-     5. xmlfield: allows you to find values listed under 'fields'
+     5. get_field_value_text: allows you to find values listed under 'fields'
      6. Use with Caution!: set_and_commit: these will create a new xml: field, so use
-        xmlfield feature, if you are simply looking to edit a major field. Using
+        get_field_value_text feature, if you are simply looking to edit a major field. Using
         this more than once will duplicate fileds
     """
 
@@ -51,7 +51,7 @@ class BePress(object):
         root = tree.getroot()
         docTitle = root.xpath('document/title')
         self.title = docTitle[0].text
-        return (lazy_encode(self.title))
+        return self.title
 
     def xmlauthor(self):
         tree = etree.parse(self.file)
@@ -63,7 +63,7 @@ class BePress(object):
         self.mname = mname[0].text
         self.fname = fname[0].text
         self.author = " ".join([_f for _f in [self.fname, self.mname, self.lname] if _f])
-        return (self.author)
+        return self.author
 
     # ---------------------------------
     def getname(self):
@@ -106,34 +106,34 @@ class BePress(object):
         elem3 = tree.findall('.//author/lname')[0]
         elem3.text = str(self.lname)
         tree = (etree.ElementTree(tree.getroot()))
-        tree.write(self.file, xml_declaration=True, encoding='iso-8859-1', method='xml')
+        tree.write(self.file, xml_declaration=True, encoding='utf-8', method='xml')
 
     def committitle(self):
         tree = etree.parse(self.file)
         elem = tree.findall('.//title')[0]
         elem.text = str(self.title)
         tree = (etree.ElementTree(tree.getroot()))
-        tree.write(self.file, xml_declaration=True, encoding='iso-8859-1', method='xml')
+        tree.write(self.file, xml_declaration=True, encoding='utf-8', method='xml')
 
     # --------------------------------------------------------------------------------------
-    def xmlfield(self, item):
-        self.fieldlocation = item
+    def get_field_value_text(self, field_name):
+        self.fieldlocation = field_name
         tree = etree.parse(self.file)
-        value = tree.xpath("//field[@name=" + "'" + item + "']/value/text()")
-        '''try:
-            self.field = field[0]
-        except IndexError:
-            self.field = 'None'
+        value = tree.xpath("//field[@name=" + "'" + field_name + "']/value/text()")
+
         try:
-            self.field = field[0]
+            return value[0]
         except IndexError:
-            self.field = 'None'
-        try:
-            self.field = value[1]
-        except IndexError:
-            self.field = 'None'
-        return self.field'''
-        return value[0]
+            return ""
+
+    def field_exists(self, field_name):
+        tree = etree.parse(self.file)
+        field = tree.xpath(f"//field[@name='{field_name}']")
+
+        if field:
+            return True
+        else: 
+            return False
 
     def chfield(self, text):
         self.field = text
@@ -149,24 +149,23 @@ class BePress(object):
             item.text = self.field
             break
         tree = (etree.ElementTree(tree.getroot()))
-        tree.write(self.file, xml_declaration=True, encoding='iso-8859-1', method='xml')
+        tree.write(self.file, xml_declaration=True, encoding='utf-8', method='xml')
 
-    # Running this set_and_commit functions will keep adding new fields,
-    # if you are tyring to change the major use commitmajor instead
     def set_and_commitmajor(self, text):
-        self.major = text
-        tree = etree.parse(self.file)
-        root = tree.getroot()
-        for element in root.iter('fields'):
-            root2 = element
-            child = etree.SubElement(root2, "field")
-            child2 = etree.SubElement(child, "value")
-            child.set("name", 'major')
-            child.set("type", "string")
-            child2.text = str(self.major)
-            tree = (etree.ElementTree(tree.getroot()))
-            indent(element, 3)
-            tree.write(self.file, xml_declaration=True, encoding='iso-8859-1', method='xml')
+        if not self.field_exists("major"):
+            self.major = text
+            tree = etree.parse(self.file)
+            root = tree.getroot()
+            for element in root.iter('fields'):
+                root2 = element
+                child = etree.SubElement(root2, "field")
+                child2 = etree.SubElement(child, "value")
+                child.set("name", 'major')
+                child.set("type", "string")
+                child2.text = str(self.major)
+                tree = (etree.ElementTree(tree.getroot()))
+                self.indent(element, 3)
+                tree.write(self.file, xml_declaration=True, encoding='utf-8', method='xml')
 
     # I'm not a fan of creating a separate function to update documents with two majors.
     # I will try to find a better solution in the future
@@ -186,8 +185,8 @@ class BePress(object):
             child2.text = str(self.major1)
             child3.text = str(self.major2)
             tree = (etree.ElementTree(tree.getroot()))
-            indent(element, 3)
-            tree.write(self.file, xml_declaration=True, encoding='iso-8859-1', method='xml')
+            self.indent(element, 3)
+            tree.write(self.file, xml_declaration=True, encoding='utf-8', method='xml')
 
 
     # Once Names have been corrected, we need to update the Rights_Holder
@@ -196,14 +195,32 @@ class BePress(object):
         value = tree.xpath("//field[@name='rights_holder']/value")
         value[0].text = str(self.author)
         tree = (etree.ElementTree(tree.getroot()))
-        tree.write(self.file, xml_declaration=True, encoding='iso-8859-1', method='xml')
+        tree.write(self.file, xml_declaration=True, encoding='utf-8', method='xml')
+
+    # Used for formatting when commiting majors
+    # Stack Overflow https://stackoverflow.com/questions/749796/pretty-printing-xml-in-python
+    def indent(self, elem, level=0):
+        i = "\n" + level * "  "
+        if len(elem):
+            if not elem.text or not elem.text.strip():
+                elem.text = i + "  "
+            if not elem.tail or not elem.tail.strip():
+                elem.tail = i
+            for elem in elem:
+                self.indent(elem, level + 1)
+            if not elem.tail or not elem.tail.strip():
+                elem.tail = i
+        else:
+            if level and (not elem.tail or not elem.tail.strip()):
+                elem.tail = i
 
 
 # ----------------------------------------------------------------
 # BePressed used functions
 # ----------------------------------------------------------------
 # If you encounter a new encoding error, add the error here
-# Replacing Error with Desired Value
+# Replacing Error with Desired Value. This function is also used
+# by Validate.
 def lazy_encode(text):
     try:
         regreplace = re.sub(r'\u201c', '"', text)
@@ -217,30 +234,12 @@ def lazy_encode(text):
         regreplace9 = re.sub(r'\u0301', "'", regreplace8)
         regreplace10 = re.sub(r'\u0306', "g", regreplace9)
         regreplace11 = re.sub(r'\u0131', 'i', regreplace10)
-        ret1999 = regreplace11.encode('iso-8859-1')
+        ret1999 = regreplace11.encode('utf-8')
         return ret1999
     except UnicodeEncodeError:
         return 'ENCODING ERROR'
     except UnicodeDecodeError:
         return 'ENCODING ERROR'
-
-
-# Used for formatting when commiting majors
-# Stack Overflow https://stackoverflow.com/questions/749796/pretty-printing-xml-in-python
-def indent(elem, level=0):
-    i = "\n" + level * "  "
-    if len(elem):
-        if not elem.text or not elem.text.strip():
-            elem.text = i + "  "
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = i
-        for elem in elem:
-            indent(elem, level + 1)
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = i
-    else:
-        if level and (not elem.tail or not elem.tail.strip()):
-            elem.tail = i
 
 
 # --------------------------------
@@ -263,13 +262,13 @@ class PDFPress(object):
         self.name = os.path.basename(file)
         self.file = convert(file, pages=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
         self.pdfauthor = 'None'
+        self.major = 'None'
 
     def getname(self):
         return self.name
 
     def genfile(self):
         self.gfile = str(self.file).replace('\t', '').replace('\n\n', '\n').strip()
-        self.gfile = StringIO(self.gfile)
         return self.gfile
 
     def genlines(self):
@@ -452,31 +451,29 @@ class PDFPress(object):
                                 B36, B37, B38, B39, B40, B41, B42, B43, B44, B45, B46, B47, B48, B49, B50, B51, B52,
                                 B53, B54, B55, B56, b5a, b6a, b7a, b8a, b9a]
             ret = (max(collected_ratios, key=lambda item: item[1]))
-            ret2 = unicodedata.normalize("NFKD", ret[0].decode('utf-8'))
-            ret3 = lazy_encode(ret2)
-            if title == True:
-                self.pdftitle = ret3.strip()
+            ret2 = unicodedata.normalize("NFKD", ret[0])
+            if title:
+                self.pdftitle = ret2.strip()
                 return self.pdftitle
-            elif author == True:
-                self.pdfauthor = ret3.strip()
+            elif author:
+                self.pdfauthor = ret2.strip()
                 return self.pdfauthor
             else:
-                return ret3.strip()
+                return ret2.strip()
         except (UnicodeDecodeError):
             return (("Error", 0))
         except (IndexError):
             return (("Error", 0))
 
     def findmajor(self):
-        self.major = 'None'
-        for line in self.gfile:
-            z = re.search(r'(?<=Major:).*$|(?<=majors:).*$|(?<=Co-Majors:).*$', line)
-            if z != None:
-                major = z.group()
-                self.major = (major.strip())
-                self.major = (re.sub(r'\(.*\)', '', str(self.major)))
-                corrections = RegexpReplacer.replace(self.major)
-                self.major = str(corrections)
+        major_p = re.compile(r"(?<=Major:).*$|(?<=majors:).*$|(?<=Co-Majors:).*$")
+        sub_p = re.compile(r"\(.*\)")
+        for line in self.gfile.split("\n"):
+            major_search_result = re.search(major_p, line)
+            if major_search_result is not None:
+                major = major_search_result.group()
+                self.major = re.sub(sub_p, '', major.strip())
+                self.major = str(RegexpReplacer.replace(self.major))
 
         return self.major
 
@@ -484,7 +481,7 @@ class PDFPress(object):
         complete = False
         with open(authoritylist) as f:
             master_list = [tuple(line) for line in csv.reader(f)]
-        self.major = lazy_encode(str(self.major))
+        #self.major = lazy_encode(str(self.major))
         best_match = process.extract(self.major, master_list, limit=1)
         # See if there are two valid majors
         try:
@@ -493,11 +490,11 @@ class PDFPress(object):
             self.secondmajor = splitmajor[1].strip()
         except IndexError:
             pass
-        except ValueError:
-            pass
         except UnicodeDecodeError:
             pass
         except UnicodeEncodeError:
+            pass
+        except ValueError:
             pass
         try:
             best_match2 = process.extract(self.firstmajor, master_list, limit=1)
@@ -576,7 +573,7 @@ class PDFPress(object):
                         elif major == '3':
                             self.major = str(*suggested_matches[2][0])
                         else:
-                            self.major = major
+                            self.major = str(major)
                         print(self.major)
                         confirm = input('CORRECT? [y|n]')
                         if confirm == 'y' or confirm == 'Y':
@@ -603,7 +600,7 @@ def convert(fname, pages=None):
     converter = TextConverter(manager, output, laparams=LAParams())
     interpreter = PDFPageInterpreter(manager, converter)
 
-    infile = file(fname, 'rb')
+    infile = open(fname, 'rb')
     for page in PDFPage.get_pages(infile, pagenums):
         interpreter.process_page(page)
     infile.close()
@@ -626,10 +623,10 @@ class SortDocuments(object):
 
     def __init__(self, path):
         self.path = path
-        self.xml_path = str(self.path + 'XML')
-        self.pdf_path = str(self.path + 'PDF')
-        self.multi_path = str(self.path + 'MultiMedia')
-        self.embargo_path = str(self.path + 'Embargo')
+        self.xml_path = os.path.join(self.path, "XML")
+        self.pdf_path = os.path.join(self.path, "PDF")
+        self.multi_path = os.path.join(self.path, "MultiMedia")
+        self.embargo_path = os.path.join(self.path, "Embargo")
 
     def find_embargo(self, xml_file, pdf_file, embargo_date):
         """Determines if a document is embargoed and moves it if needed.
@@ -710,31 +707,45 @@ class SortDocuments(object):
         return new_dir_path
         
     def make_folders(self):
-        path = ('XML')
-        if not os.path.exists(path):
-            os.makedirs(path)
-        path2 = ('PDF')
-        if not os.path.exists(path2):
-            os.makedirs(path2)
-        path3 = ('MultiMedia')
-        if not os.path.exists(path3):
-            os.makedirs(path3)
-        path4 = ('Embargo')
-        if not os.path.exists(path4):
-            os.makedirs(path4)
+        if not os.path.exists(self.xml_path):
+            os.makedirs(self.xml_path)
 
-    def sort(self):
-        for file in glob.glob(str(self.path) + "\*.pdf"):
-            shutil.move(file, self.pdfpath)
-            self.pdfpath = str(self.path + '\PDF')
-        for file in glob.glob(str(self.path) + "\*.xml"):
-            shutil.move(file, self.xml_path)
-        for file in glob.glob(str(self.path) + "\\*"):
-            if file != self.pdfpath \
-                    and file != self.xml_path \
-                    and file != self.multi_path \
-                    and file != self.embargo_path:
-                shutil.move(file, self.multi_path)
+        if not os.path.exists(self.pdf_path):
+            os.makedirs(self.pdf_path)
+
+        if not os.path.exists(self.multi_path):
+            os.makedirs(self.multi_path)
+
+        if not os.path.exists(self.embargo_path):
+            os.makedirs(self.embargo_path)
+
+    def set_up_proquest_files(self, pq_files):
+        for file in glob.glob(os.path.join(pq_files, "*")):
+            zip_ref = zipfile.ZipFile(file, 'r')
+            zip_ref.extractall(self.path)
+            zip_ref.close()
+        
+        self.make_folders()
+
+        pdfs = glob.glob(os.path.join(self.path, "*.pdf"))
+        xml = glob.glob(os.path.join(self.path, "*.xml"))
+        media = [x 
+                 for x 
+                 in glob.glob(os.path.join(self.path, "*/")) 
+                 if os.path.normpath(x) not in [self.embargo_path, 
+                                                self.multi_path, 
+                                                self.pdf_path, 
+                                                self.xml_path]]
+
+        for p in pdfs:
+            shutil.move(p, self.pdf_path)
+        
+        for x in xml:
+            shutil.move(x, self.xml_path)
+
+        for m in media:
+            shutil.move(m, self.multi_path)
+
 
 
 
@@ -742,21 +753,21 @@ class SortDocuments(object):
 
 def xmltransform(infile, xslt, outfile):
     """This function creates a command line subprocess for python to run saxon. You must have saxon installed.
-    We are currently running Saxon HE, which is an open source xslt processor, and uses a .Net framework.
-    This method can replicated using an oXygen transformation scenario, if that is more familiar."""
+    We are currently running Saxon HE, which is an open source xslt processor, and uses the .Net framework version.
+    This method can be replicated using an oXygen transformation scenario, if that is more familiar."""
     subprocess.call('Transform -s:' + infile + " " + '-xsl:' + xslt + " " + '-o:' + outfile)
 
 
 # our merge xsl does not support roottags, so this is an pythonic way of adding them after merger
 def roottag(file):
-    tree = ET.parse(file)
+    tree = etree.parse(file)
     root = tree.getroot()
     # BePress uses a 'documents' root, so it makes sense to write this into the code.
     # If you need to change the rootname do so here.
-    newroot = ET.Element('documents')
+    newroot = etree.Element('documents')
     newroot.insert(0, root)
-    tree = (ET.ElementTree(tree.getroot()))
-    tree.write(file, xml_declaration=True, encoding='iso-8859-1', method='xml')
+    tree = (etree.ElementTree(tree.getroot()))
+    tree.write(file, xml_declaration=True, encoding='utf-8', method='xml')
 
 
 def proquest2bepress(py_path, output_path):
@@ -779,7 +790,7 @@ def proquest2bepress(py_path, output_path):
 
     # define premises for transformation
     pq_infile = os.path.join(output_path, "XML")
-    xslt_script = os.path.join(output_path, "Sup/ETD-ProQuestXML2bepressXML-2017.xsl")
+    xslt_script = os.path.join(output_path, "../Sup/ETD-ProQuestXML2bepressXML-2017.xsl")
     be_outfile = os.path.join(output_path, "XML-Transformed")
 
     for file in glob.glob(os.path.join(pq_infile, "*.xml")):
@@ -789,15 +800,8 @@ def proquest2bepress(py_path, output_path):
 
 
 # -------------------------------------------------------------------------------------------------------------------------------
-# unzip, chext (change extension), and includesubpath (add extension)
+# chext (change extension), and includesubpath (add extension)
 # Designed for more basic os needs within the workflow
-
-def unzip(location, path):
-    for file in glob.glob(os.path.join(location, "*")):
-        zip_ref = zipfile.ZipFile(file, 'r')
-        zip_ref.extractall(path)
-        zip_ref.close()
-
 
 def chext(file, current_ext, desired_ext):
     try:
@@ -823,15 +827,15 @@ def xmlrename(file):
 class Validate(object):
     """
     Methods:
-    validate: assigns fuzzy score based on levenshtein distance. If there is a direct match, the object is valid
+    validate: assigns fuzzy score based on Levenshtein distance. If there is a direct match, the object is valid
     titleresolve: when there is a discrepency between an ETD's pdf coversheet and our Proquest data, title resolve is a
     simple interface for editing the title
     authorreslove: ditto but for an author's first, middle, and last name
     """
 
-    def __init__(self, xmlitem, pdfitem, pdfpath, pdfreader):
+    def __init__(self, xmlitem, pdftitle, pdfpath, pdfreader):
         self.xml = xmlitem
-        self.pdf = pdfitem
+        self.pdf = pdftitle
         self.pdfpath = pdfpath
         # pdfreader is needed to open and close pdf during QC
         self.pdfreader = pdfreader
