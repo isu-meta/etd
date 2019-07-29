@@ -1,28 +1,25 @@
 
-Etd
-====
+# etd
 
 Creates BePress XML from ProQuest metadata
 
-Prerequisites
--------------
+## Prerequisites
 
-* saxon he
+* [Saxon HE](http://saxon.sourceforge.net/)
 
-This code assumes you have saxon available for xslt transformations. We
+This code assumes you have Saxon available for XSLT transformations. We
 are using the [Saxon HE for .Net](http://saxon.sourceforge.net/)
 
-Getting Started
-----------------
+## Getting Started
 
-Clone the repository and create an anaconda2 environment.
+Clone the repository and create a virtual environment.
 
-``` {.sourceCode .console}
-$ git clone https://github.com/wryan14/etd.git
-$ cd etd
-$ conda create -n "etd_env" python=2.7
-$ activate etd_env
-$ pip install -r requirements.txt
+```
+> git clone https://github.com/isu-meta/etd
+> cd etd
+> python -m venv etd_env
+> etd_env\Scripts\activate
+> pip install -r requirements.txt
 ```
 
 Update paths in [workflow.py](workflow.py)
@@ -33,23 +30,21 @@ Update paths in [workflow.py](workflow.py)
 | path          | Path to a blank output directory |
 | pq_path       | Path to proquest .zip files      |
 
-
 ### Run
 
 From your anaconda environment.
 
-``` {.sourceCode .console}
-$ python workflow.py
+```
+> python workflow.py
 ```
 
 Results will appear in the output directory mentioned above.
 
-Other Institutions
--------------------
+## Other Institutions
 
 Non-ISU institutions will need to change the fulltext-url path in [ETD-ProQuestXML2bepressXML-2017.xsl](Sup/ETD-ProQuestXML2bepressXML-2017.xsl).
 
-``` {.sourceCode .xml}
+```xml
 <fulltext-url>
 <xsl:variable name="pdfpath">
     <xsl:value-of select="DISS_content/DISS_binary"/>
@@ -60,7 +55,7 @@ Non-ISU institutions will need to change the fulltext-url path in [ETD-ProQuestX
 
 A new [ListofMajors.csv](Sup/ListofMajors.csv) will also need to be included.
 
-Documentation
---------------
+## Documentation
 
-https://mddocs.readthedocs.io/en/latest/theses.html#etds
+**This documentation was written for an older version of etd. Some parts may
+no longer be applicable.** https://mddocs.readthedocs.io/en/latest/theses.html#etds
