@@ -614,9 +614,6 @@ class SortDocuments(object):
     """
     Designed to separate .pdf and .xml files into seperate folders
     Methods:
-        find_embargo: identify and move embargoed files to Embargo folder
-        _handle_embargo_error
-        _make_embargo_dir: 
         make_folders: if folders XML and PDF do not exist, create folders
         sort: sorts and moves files to corresponding folder
     """
@@ -626,85 +623,6 @@ class SortDocuments(object):
         self.xml_path = os.path.join(self.path, "XML")
         self.pdf_path = os.path.join(self.path, "PDF")
         self.multi_path = os.path.join(self.path, "MultiMedia")
-        self.embargo_path = os.path.join(self.path, "Embargo")
-
-    def find_embargo(self, xml_file, pdf_file, embargo_date):
-        """Determines if a document is embargoed and moves it if needed.
-
-        Determines if a document is still under embargo. If it is it
-        moves it to the appropriate embargo directory, creating it if
-        necessary.
-
-        Parameters
-        ----------
-        xml_file : str
-            Path to the XML file.
-        pdf_file : str
-            Path the the PDF file.
-        embargo_date : str
-            Date in the format YYYY-MM-DD, i.e. 2018-04-10.
-        
-        Returns
-        -------
-        str
-            The path for the embargo directory or an empty string.
-        """
-        try:
-            today = datetime.date.today().strftime('%Y-%m-%d')
-            embargo_date_parsed = parser.parse(embargo_date)
-            today_parsed = parser.parse(today)
-            if embargo_date_parsed > today_parsed:
-                save_path = self._make_embargo_dir(embargo_date[:-3])
-
-                try:
-                    shutil.move(pdf_file, save_path)
-                except (shutil.Error, WindowsError):
-                    return self._handle_embargo_error(pdf_file, embargo_date)
-
-                try:
-                    shutil.move(xml_file, save_path)
-                except (shutil.Error, WindowsError):
-                    return self._handle_embargo_error(xml_file, embargo_date)
-
-                return embargo_date
-
-            else:
-                return ""
-
-        except ValueError:
-            return self._handle_embargo_error(xml_file, embargo_date)
-
-    def _handle_embargo_error(self, file_path, embargo_date):
-        """A little function to remove repetative code in find_embargo except
-        clauses."""
-        
-        print("ERROR moving to embargo folder:")
-        print(file_path)
-
-        return embargo_date
-    
-    def _make_embargo_dir(self, embargo_year_month):
-        """Create a directory for embargoed files.
-
-        Create a directory for an embargoed file with a name format like
-        2018-04 unless the directory already exists.
-
-        Parameters
-        ----------
-        embargo_year_month : str
-            A string in the format YYYY-MM, i.e. 2018-04.
-
-        Returns
-        -------
-        str
-            The path for the embargo directory.
-        """
-        new_dir_path = os.path.join(self.embargo_path, embargo_year_month)
-
-        if not os.path.exists(new_dir_path):
-            os.makedirs(new_dir_path)
-
-        return new_dir_path
         
     def make_folders(self):
         if not os.path.exists(self.xml_path):
@@ -715,9 +633,6 @@ class SortDocuments(object):
 
         if not os.path.exists(self.multi_path):
             os.makedirs(self.multi_path)
-
-        if not os.path.exists(self.embargo_path):
-            os.makedirs(self.embargo_path)
 
     def set_up_proquest_files(self, pq_files):
         for file in glob.glob(os.path.join(pq_files, "*")):
@@ -732,8 +647,7 @@ class SortDocuments(object):
         media = [x 
                  for x 
                  in glob.glob(os.path.join(self.path, "*/")) 
-                 if os.path.normpath(x) not in [self.embargo_path, 
-                                                self.multi_path, 
+                 if os.path.normpath(x) not in [self.multi_path, 
                                                 self.pdf_path, 
                                                 self.xml_path]]
 

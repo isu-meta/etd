@@ -34,8 +34,6 @@ titles = []
 authors = []
 title_correction = []
 author_correction = []
-embargodate = []
-embargoname = []
 
 # Initiate for-loop to create document objects
 # XML-Transformed is the folder generated from proquest2bepress() method
@@ -67,7 +65,7 @@ for file in glob.glob(path + '\\XML-Transformed\\*.xml')[27:]:
     try:
         vtitle = Validate(BP.title, PDP.pdftitle, pdf_file, pdf_reader)
     except AttributeError:
-        vtitle = Validate(BP.title,pdfitem="Error",pdfpath=pdf_file, pdfreader=pdf_reader)
+        vtitle = Validate(BP.title, pdftitle="Error", pdfpath=pdf_file, pdfreader=pdf_reader)
 
     vtitle.validatetitle()
     trs = vtitle.titleresolve()
@@ -114,30 +112,14 @@ for file in glob.glob(path + '\\XML-Transformed\\*.xml')[27:]:
     else:
         pass
 
-    # find and move Files with upcoming embargo dates
-    ed = BP.get_field_value_text('embargo_date')
-    edtitle = os.path.basename(file)
-    embv = SD.find_embargo(file, pdf_file, ed)
-    if embv != "":
-        embargodate.append(ed)
-        embargoname.append(edtitle)
-    else:
-        pass
-    continue
-
 # Finally done with the for loop, we can submit our error report and merge the corrected xmls for batch uploading
 
 # Write error report with pandas
-ErrorDataSet = list(zip(names, titles, title_correction, authors, author_correction))
-df = pd.DataFrame(data=ErrorDataSet, columns=['File', 'Title', 'Correction', 'Author', 'Correction'])
+error_data_set = list(zip(names, titles, title_correction, authors, author_correction))
+df = pd.DataFrame(data=error_data_set, columns=['File', 'Title', 'Correction', 'Author', 'Correction'])
 df.to_csv('ErrorReport.csv', index=True, header=True)
 
-# Write embargo report
-EmbargoDataSet = list(zip(embargoname, embargodate))
-ef = pd.DataFrame(data=EmbargoDataSet, columns=['File', 'Date'])
-ef.to_csv('EmbargoReport.csv', index=True, header=True)
-
-# Merge non-embargoed xml using Kelly's merge XSLT
+# Merge document XML using Kelly Thompson's merge XSLT
 inpath = path + '\\XML-Transformed'
 fileinpath = os.listdir(inpath)[0]
 newinpath = inpath + "\\" + fileinpath
