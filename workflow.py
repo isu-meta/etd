@@ -5,14 +5,24 @@ import os.path
 
 import pandas as pd
 
-from etdcode.metabeqc import BePress, chext, lazy_encode, PDFPress, proquest2bepress, roottag, SortDocuments, Validate, xmltransform
+from etdcode.metabeqc import (
+    BePress,
+    chext,
+    lazy_encode,
+    PDFPress,
+    proquest2bepress,
+    roottag,
+    SortDocuments,
+    Validate,
+    xmltransform,
+)
 
 # Set your paths
-pdf_reader = 'C:\\Program Files (x86)\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe'
+pdf_reader = "C:\\Program Files (x86)\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe"
 
 py_code = os.getcwd()
 pq_path = "Y:\\Scholarly Publishing Services\\DR Projects\\proquest_etd\\r20190607"
-path = 'C:\\Users\\wteal\\Projects\\etd\\OUTPUT'
+path = "C:\\Users\\wteal\\Projects\\etd\\OUTPUT"
 
 # Change python's OS path to working folder
 os.chdir(path)
@@ -38,7 +48,7 @@ author_correction = []
 # Initiate for-loop to create document objects
 # XML-Transformed is the folder generated from proquest2bepress() method
 
-for file in glob.glob(path + '\\XML-Transformed\\*.xml')[27:]:
+for file in glob.glob(path + "\\XML-Transformed\\*.xml")[27:]:
     # Create BePress xml Object
     BP = BePress(file)
     be_name = BP.xmlname()
@@ -47,7 +57,7 @@ for file in glob.glob(path + '\\XML-Transformed\\*.xml')[27:]:
     be_title = BP.xmltitle()
 
     # Create PDF title page Object
-    pdf_file = os.path.join(SD.pdf_path, chext(file, '.xml', '.pdf'))
+    pdf_file = os.path.join(SD.pdf_path, chext(file, ".xml", ".pdf"))
     PDP = PDFPress(pdf_file, pdf_reader)
     # These codes format pdf extracted text
     PDP.genfile()
@@ -55,7 +65,7 @@ for file in glob.glob(path + '\\XML-Transformed\\*.xml')[27:]:
 
     # Now we need to find the major, this will probably bring some documents for manual review
     PDP.findmajor()
-    authority = py_code + '\\Sup\\ListofMajors.csv'
+    authority = py_code + "\\Sup\\ListofMajors.csv"
     major = PDP.reconcilemajor(authority)
     # Need a better solution to sorting documents with more than one major
 
@@ -65,13 +75,15 @@ for file in glob.glob(path + '\\XML-Transformed\\*.xml')[27:]:
     try:
         vtitle = Validate(BP.title, PDP.pdftitle, pdf_file, pdf_reader)
     except AttributeError:
-        vtitle = Validate(BP.title, pdftitle="Error", pdfpath=pdf_file, pdfreader=pdf_reader)
+        vtitle = Validate(
+            BP.title, pdftitle="Error", pdfpath=pdf_file, pdfreader=pdf_reader
+        )
 
     vtitle.validatetitle()
     trs = vtitle.titleresolve()
     if trs is not None:
-        chng = input('Commit change to BePress XML? [y|n]')
-        if chng == 'y' or chng == 'Y':
+        chng = input("Commit change to BePress XML? [y|n]")
+        if chng == "y" or chng == "Y":
             BP.chtitle(trs)
             BP.committitle()
     else:
@@ -87,8 +99,8 @@ for file in glob.glob(path + '\\XML-Transformed\\*.xml')[27:]:
     vauthor.validateauthor(fname, mname, lname, be_author)
     ars = vauthor.authorresolve(fname, mname, lname)
     if ars is not None:
-        chng = input('Commit change to BePress XML? [y|n]')
-        if chng == 'y' or chng == 'Y':
+        chng = input("Commit change to BePress XML? [y|n]")
+        if chng == "y" or chng == "Y":
             BP.chfname(ars[0])
             BP.chmname(ars[1])
             BP.chlname(ars[2])
@@ -116,16 +128,18 @@ for file in glob.glob(path + '\\XML-Transformed\\*.xml')[27:]:
 
 # Write error report with pandas
 error_data_set = list(zip(names, titles, title_correction, authors, author_correction))
-df = pd.DataFrame(data=error_data_set, columns=['File', 'Title', 'Correction', 'Author', 'Correction'])
-df.to_csv('ErrorReport.csv', index=True, header=True)
+df = pd.DataFrame(
+    data=error_data_set, columns=["File", "Title", "Correction", "Author", "Correction"]
+)
+df.to_csv("ErrorReport.csv", index=True, header=True)
 
 # Merge document XML using Kelly Thompson's merge XSLT
-inpath = path + '\\XML-Transformed'
+inpath = path + "\\XML-Transformed"
 fileinpath = os.listdir(inpath)[0]
 newinpath = inpath + "\\" + fileinpath
 
-outpath = path + '\\outfile.xml'
-merge = py_code + '\\Sup\\merge.xsl'
+outpath = path + "\\outfile.xml"
+merge = py_code + "\\Sup\\merge.xsl"
 
 xmltransform(newinpath, merge, outpath)
-roottag(path + '\\outfile.xml')
+roottag(path + "\\outfile.xml")

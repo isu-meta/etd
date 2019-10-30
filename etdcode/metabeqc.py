@@ -26,6 +26,7 @@ from etdcode.regreplace import RegexpReplacer
 # Code for RegexpReplacer found in NLTK Cookbook - used for replacing "one-off" majors
 RegexpReplacer = RegexpReplacer()
 
+
 class BePress(object):
     """
     -----Creates object from transformed ProQuest xml data-----
@@ -49,20 +50,22 @@ class BePress(object):
     def xmltitle(self):
         tree = etree.parse(self.file)
         root = tree.getroot()
-        docTitle = root.xpath('document/title')
+        docTitle = root.xpath("document/title")
         self.title = docTitle[0].text
         return self.title
 
     def xmlauthor(self):
         tree = etree.parse(self.file)
         root = tree.getroot()
-        lname = root.xpath('document/authors/author/lname')
-        fname = root.xpath('document/authors/author/fname')
-        mname = root.xpath('document/authors/author/mname')
+        lname = root.xpath("document/authors/author/lname")
+        fname = root.xpath("document/authors/author/fname")
+        mname = root.xpath("document/authors/author/mname")
         self.lname = lname[0].text
         self.mname = mname[0].text
         self.fname = fname[0].text
-        self.author = " ".join([_f for _f in [self.fname, self.mname, self.lname] if _f])
+        self.author = " ".join(
+            [_f for _f in [self.fname, self.mname, self.lname] if _f]
+        )
         return self.author
 
     # ---------------------------------
@@ -73,8 +76,10 @@ class BePress(object):
         return self.title
 
     def getauthor(self):
-        self.author = " ".join([_f for _f in [self.fname, self.mname, self.lname] if _f])
-        return (self.author)
+        self.author = " ".join(
+            [_f for _f in [self.fname, self.mname, self.lname] if _f]
+        )
+        return self.author
 
     # --------------------------------
     def chtitle(self, newtitle):
@@ -96,24 +101,29 @@ class BePress(object):
     # -----------------------------------
     def commitauthor(self):
         tree = etree.parse(self.file)
-        elem = tree.findall('.//author/fname')[0]
+        elem = tree.findall(".//author/fname")[0]
         elem.text = str(self.fname)
-        if self.mname == None or self.mname == 'None' or self.mname == " " or self.mname == "":
+        if (
+            self.mname == None
+            or self.mname == "None"
+            or self.mname == " "
+            or self.mname == ""
+        ):
             pass
         else:
-            elem2 = tree.findall('.//author/mname')[0]
+            elem2 = tree.findall(".//author/mname")[0]
             elem2.text = str(self.mname)
-        elem3 = tree.findall('.//author/lname')[0]
+        elem3 = tree.findall(".//author/lname")[0]
         elem3.text = str(self.lname)
-        tree = (etree.ElementTree(tree.getroot()))
-        tree.write(self.file, xml_declaration=True, encoding='utf-8', method='xml')
+        tree = etree.ElementTree(tree.getroot())
+        tree.write(self.file, xml_declaration=True, encoding="utf-8", method="xml")
 
     def committitle(self):
         tree = etree.parse(self.file)
-        elem = tree.findall('.//title')[0]
+        elem = tree.findall(".//title")[0]
         elem.text = str(self.title)
-        tree = (etree.ElementTree(tree.getroot()))
-        tree.write(self.file, xml_declaration=True, encoding='utf-8', method='xml')
+        tree = etree.ElementTree(tree.getroot())
+        tree.write(self.file, xml_declaration=True, encoding="utf-8", method="xml")
 
     # --------------------------------------------------------------------------------------
     def get_field_value_text(self, field_name):
@@ -132,7 +142,7 @@ class BePress(object):
 
         if field:
             return True
-        else: 
+        else:
             return False
 
     def chfield(self, text):
@@ -145,27 +155,31 @@ class BePress(object):
     # Before using the commitfield function, make sure self.field contains the desired value
     def commitfield(self):
         tree = etree.parse(self.file)
-        for item in tree.xpath("//field[@name=" + "'" + str(self.fieldlocation) + "']/value"):
+        for item in tree.xpath(
+            "//field[@name=" + "'" + str(self.fieldlocation) + "']/value"
+        ):
             item.text = self.field
             break
-        tree = (etree.ElementTree(tree.getroot()))
-        tree.write(self.file, xml_declaration=True, encoding='utf-8', method='xml')
+        tree = etree.ElementTree(tree.getroot())
+        tree.write(self.file, xml_declaration=True, encoding="utf-8", method="xml")
 
     def set_and_commitmajor(self, text):
         if not self.field_exists("major"):
             self.major = text
             tree = etree.parse(self.file)
             root = tree.getroot()
-            for element in root.iter('fields'):
+            for element in root.iter("fields"):
                 root2 = element
                 child = etree.SubElement(root2, "field")
                 child2 = etree.SubElement(child, "value")
-                child.set("name", 'major')
+                child.set("name", "major")
                 child.set("type", "string")
                 child2.text = str(self.major)
-                tree = (etree.ElementTree(tree.getroot()))
+                tree = etree.ElementTree(tree.getroot())
                 self.indent(element, 3)
-                tree.write(self.file, xml_declaration=True, encoding='utf-8', method='xml')
+                tree.write(
+                    self.file, xml_declaration=True, encoding="utf-8", method="xml"
+                )
 
     # I'm not a fan of creating a separate function to update documents with two majors.
     # I will try to find a better solution in the future
@@ -175,27 +189,26 @@ class BePress(object):
         self.major2 = text2
         tree = etree.parse(self.file)
         root = tree.getroot()
-        for element in root.iter('fields'):
+        for element in root.iter("fields"):
             root2 = element
             child = etree.SubElement(root2, "field")
             child2 = etree.SubElement(child, "value")
             child3 = etree.SubElement(child, "value")
-            child.set("name", 'major')
+            child.set("name", "major")
             child.set("type", "string")
             child2.text = str(self.major1)
             child3.text = str(self.major2)
-            tree = (etree.ElementTree(tree.getroot()))
+            tree = etree.ElementTree(tree.getroot())
             self.indent(element, 3)
-            tree.write(self.file, xml_declaration=True, encoding='utf-8', method='xml')
-
+            tree.write(self.file, xml_declaration=True, encoding="utf-8", method="xml")
 
     # Once Names have been corrected, we need to update the Rights_Holder
     def updaterights_holder(self):
         tree = etree.parse(self.file)
         value = tree.xpath("//field[@name='rights_holder']/value")
         value[0].text = str(self.author)
-        tree = (etree.ElementTree(tree.getroot()))
-        tree.write(self.file, xml_declaration=True, encoding='utf-8', method='xml')
+        tree = etree.ElementTree(tree.getroot())
+        tree.write(self.file, xml_declaration=True, encoding="utf-8", method="xml")
 
     # Used for formatting when commiting majors
     # Stack Overflow https://stackoverflow.com/questions/749796/pretty-printing-xml-in-python
@@ -223,26 +236,27 @@ class BePress(object):
 # by Validate.
 def lazy_encode(text):
     try:
-        regreplace = re.sub(r'\u201c', '"', text)
-        regreplace2 = re.sub(r'\u201d', '"', regreplace)
-        regreplace3 = re.sub(r'\u2019', "'", regreplace2)
-        regreplace4 = re.sub(r'\u2018', "'", regreplace3)
-        regreplace5 = re.sub(r'\u2212', "-", regreplace4)
-        regreplace6 = re.sub(r'\u03b2', 'b', regreplace5)
-        regreplace7 = re.sub(r'\u2013', '-', regreplace6)
-        regreplace8 = re.sub(r'\u03b3', '(&#947)', regreplace7)
-        regreplace9 = re.sub(r'\u0301', "'", regreplace8)
-        regreplace10 = re.sub(r'\u0306', "g", regreplace9)
-        regreplace11 = re.sub(r'\u0131', 'i', regreplace10)
-        ret1999 = regreplace11.encode('utf-8')
+        regreplace = re.sub(r"\u201c", '"', text)
+        regreplace2 = re.sub(r"\u201d", '"', regreplace)
+        regreplace3 = re.sub(r"\u2019", "'", regreplace2)
+        regreplace4 = re.sub(r"\u2018", "'", regreplace3)
+        regreplace5 = re.sub(r"\u2212", "-", regreplace4)
+        regreplace6 = re.sub(r"\u03b2", "b", regreplace5)
+        regreplace7 = re.sub(r"\u2013", "-", regreplace6)
+        regreplace8 = re.sub(r"\u03b3", "(&#947)", regreplace7)
+        regreplace9 = re.sub(r"\u0301", "'", regreplace8)
+        regreplace10 = re.sub(r"\u0306", "g", regreplace9)
+        regreplace11 = re.sub(r"\u0131", "i", regreplace10)
+        ret1999 = regreplace11.encode("utf-8")
         return ret1999
     except UnicodeEncodeError:
-        return 'ENCODING ERROR'
+        return "ENCODING ERROR"
     except UnicodeDecodeError:
-        return 'ENCODING ERROR'
+        return "ENCODING ERROR"
 
 
 # --------------------------------
+
 
 class PDFPress(object):
     """
@@ -261,23 +275,23 @@ class PDFPress(object):
         self.path = file
         self.name = os.path.basename(file)
         self.file = convert(file, pages=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-        self.pdfauthor = 'None'
-        self.major = 'None'
+        self.pdfauthor = "None"
+        self.major = "None"
 
     def getname(self):
         return self.name
 
     def genfile(self):
-        self.gfile = str(self.file).replace('\t', '').replace('\n\n', '\n').strip()
+        self.gfile = str(self.file).replace("\t", "").replace("\n\n", "\n").strip()
         return self.gfile
 
     def genlines(self):
-        self.listfile = str(self.file).replace('\t', '').replace('\n\n', '\n').strip()
+        self.listfile = str(self.file).replace("\t", "").replace("\n\n", "\n").strip()
         self.listfile = StringIO(str(self.listfile))
         lower_lines = []
         standard_lines = []
         for line in self.listfile:
-            cleanline = (line.replace('\t', ' ').strip())
+            cleanline = line.replace("\t", " ").strip()
             lower_lines.append(cleanline)
             standard_lines.append(cleanline)
         self.standard_lines = standard_lines
@@ -293,10 +307,14 @@ class PDFPress(object):
             la3 = " ".join([self.lower_lines[3], self.lower_lines[2]])
             la4 = " ".join([self.lower_lines[4], self.lower_lines[3]])
             A1 = " ".join([self.lower_lines[0], self.lower_lines[1]])
-            A2 = " ".join([self.lower_lines[0], self.lower_lines[1], self.lower_lines[2]])
+            A2 = " ".join(
+                [self.lower_lines[0], self.lower_lines[1], self.lower_lines[2]]
+            )
             A3 = " ".join([self.lower_lines[1], self.lower_lines[2]])
             A4 = " ".join([self.lower_lines[2], self.lower_lines[3]])
-            A5 = " ".join([self.lower_lines[1], self.lower_lines[2], self.lower_lines[3]])
+            A5 = " ".join(
+                [self.lower_lines[1], self.lower_lines[2], self.lower_lines[3]]
+            )
             a5a = " ".join([self.lower_lines[0], self.lower_lines[3]])
             A6 = " ".join([self.lower_lines[3], self.lower_lines[4]])
             A7 = " ".join([self.lower_lines[0], self.lower_lines[2]])
@@ -323,28 +341,72 @@ class PDFPress(object):
             A28 = " ".join([self.lower_lines[23], self.lower_lines[24]])
             A29 = " ".join([self.lower_lines[24], self.lower_lines[25]])
             A30 = " ".join([self.lower_lines[25], self.lower_lines[26]])
-            triA9 = " ".join([self.lower_lines[4], self.lower_lines[5], self.lower_lines[6]])
-            triA10 = " ".join([self.lower_lines[5], self.lower_lines[6], self.lower_lines[7]])
-            triA11 = " ".join([self.lower_lines[6], self.lower_lines[7], self.lower_lines[8]])
-            triA12 = " ".join([self.lower_lines[7], self.lower_lines[8], self.lower_lines[9]])
-            triA13 = " ".join([self.lower_lines[8], self.lower_lines[9], self.lower_lines[10]])
-            triA14 = " ".join([self.lower_lines[9], self.lower_lines[10], self.lower_lines[11]])
-            triA15 = " ".join([self.lower_lines[10], self.lower_lines[11], self.lower_lines[12]])
-            triA16 = " ".join([self.lower_lines[11], self.lower_lines[12], self.lower_lines[13]])
-            triA17 = " ".join([self.lower_lines[12], self.lower_lines[13], self.lower_lines[14]])
-            triA18 = " ".join([self.lower_lines[13], self.lower_lines[14], self.lower_lines[15]])
-            triA19 = " ".join([self.lower_lines[14], self.lower_lines[15], self.lower_lines[16]])
-            triA20 = " ".join([self.lower_lines[15], self.lower_lines[16], self.lower_lines[17]])
-            triA21 = " ".join([self.lower_lines[16], self.lower_lines[17], self.lower_lines[18]])
-            triA22 = " ".join([self.lower_lines[17], self.lower_lines[18], self.lower_lines[19]])
-            triA23 = " ".join([self.lower_lines[18], self.lower_lines[19], self.lower_lines[20]])
-            triA24 = " ".join([self.lower_lines[19], self.lower_lines[20], self.lower_lines[21]])
-            triA25 = " ".join([self.lower_lines[20], self.lower_lines[21], self.lower_lines[22]])
-            triA26 = " ".join([self.lower_lines[21], self.lower_lines[22], self.lower_lines[23]])
-            triA27 = " ".join([self.lower_lines[22], self.lower_lines[23], self.lower_lines[24]])
-            triA28 = " ".join([self.lower_lines[23], self.lower_lines[24], self.lower_lines[25]])
-            triA29 = " ".join([self.lower_lines[24], self.lower_lines[25], self.lower_lines[26]])
-            triA30 = " ".join([self.lower_lines[25], self.lower_lines[26], self.lower_lines[27]])
+            triA9 = " ".join(
+                [self.lower_lines[4], self.lower_lines[5], self.lower_lines[6]]
+            )
+            triA10 = " ".join(
+                [self.lower_lines[5], self.lower_lines[6], self.lower_lines[7]]
+            )
+            triA11 = " ".join(
+                [self.lower_lines[6], self.lower_lines[7], self.lower_lines[8]]
+            )
+            triA12 = " ".join(
+                [self.lower_lines[7], self.lower_lines[8], self.lower_lines[9]]
+            )
+            triA13 = " ".join(
+                [self.lower_lines[8], self.lower_lines[9], self.lower_lines[10]]
+            )
+            triA14 = " ".join(
+                [self.lower_lines[9], self.lower_lines[10], self.lower_lines[11]]
+            )
+            triA15 = " ".join(
+                [self.lower_lines[10], self.lower_lines[11], self.lower_lines[12]]
+            )
+            triA16 = " ".join(
+                [self.lower_lines[11], self.lower_lines[12], self.lower_lines[13]]
+            )
+            triA17 = " ".join(
+                [self.lower_lines[12], self.lower_lines[13], self.lower_lines[14]]
+            )
+            triA18 = " ".join(
+                [self.lower_lines[13], self.lower_lines[14], self.lower_lines[15]]
+            )
+            triA19 = " ".join(
+                [self.lower_lines[14], self.lower_lines[15], self.lower_lines[16]]
+            )
+            triA20 = " ".join(
+                [self.lower_lines[15], self.lower_lines[16], self.lower_lines[17]]
+            )
+            triA21 = " ".join(
+                [self.lower_lines[16], self.lower_lines[17], self.lower_lines[18]]
+            )
+            triA22 = " ".join(
+                [self.lower_lines[17], self.lower_lines[18], self.lower_lines[19]]
+            )
+            triA23 = " ".join(
+                [self.lower_lines[18], self.lower_lines[19], self.lower_lines[20]]
+            )
+            triA24 = " ".join(
+                [self.lower_lines[19], self.lower_lines[20], self.lower_lines[21]]
+            )
+            triA25 = " ".join(
+                [self.lower_lines[20], self.lower_lines[21], self.lower_lines[22]]
+            )
+            triA26 = " ".join(
+                [self.lower_lines[21], self.lower_lines[22], self.lower_lines[23]]
+            )
+            triA27 = " ".join(
+                [self.lower_lines[22], self.lower_lines[23], self.lower_lines[24]]
+            )
+            triA28 = " ".join(
+                [self.lower_lines[23], self.lower_lines[24], self.lower_lines[25]]
+            )
+            triA29 = " ".join(
+                [self.lower_lines[24], self.lower_lines[25], self.lower_lines[26]]
+            )
+            triA30 = " ".join(
+                [self.lower_lines[25], self.lower_lines[26], self.lower_lines[27]]
+            )
 
             B1 = (self.lower_lines[0], fuzz.ratio(keyword, self.lower_lines[0]))
             B2 = (self.lower_lines[1]), fuzz.ratio(keyword, self.lower_lines[1])
@@ -443,14 +505,103 @@ class PDFPress(object):
             AB12 = (A13, fuzz.ratio(keyword, A13))
             AB13 = (A14, fuzz.ratio(keyword, A14))
 
-            collected_ratios = [B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B12, AB1, AB2, AB3, AB4, AB5, AB6, AB7,
-                                AB8, AB9, AB10, AB11, AB12, AB13, AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC10,
-                                AC11, AC12, AC13, AC14, AC15, AC16, AC17, AC18, AC19, AC20, B13, B14, B15, B16, B17,
-                                B18, B19, B20, B21, B22, B23, B24, B25, B26, B27, B28, B29, B30, B31, B32, B33, B34,
-                                B35,
-                                B36, B37, B38, B39, B40, B41, B42, B43, B44, B45, B46, B47, B48, B49, B50, B51, B52,
-                                B53, B54, B55, B56, b5a, b6a, b7a, b8a, b9a]
-            ret = (max(collected_ratios, key=lambda item: item[1]))
+            collected_ratios = [
+                B1,
+                B2,
+                B3,
+                B4,
+                B5,
+                B6,
+                B7,
+                B8,
+                B9,
+                B10,
+                B11,
+                B12,
+                AB1,
+                AB2,
+                AB3,
+                AB4,
+                AB5,
+                AB6,
+                AB7,
+                AB8,
+                AB9,
+                AB10,
+                AB11,
+                AB12,
+                AB13,
+                AC1,
+                AC2,
+                AC3,
+                AC4,
+                AC5,
+                AC6,
+                AC7,
+                AC8,
+                AC9,
+                AC10,
+                AC11,
+                AC12,
+                AC13,
+                AC14,
+                AC15,
+                AC16,
+                AC17,
+                AC18,
+                AC19,
+                AC20,
+                B13,
+                B14,
+                B15,
+                B16,
+                B17,
+                B18,
+                B19,
+                B20,
+                B21,
+                B22,
+                B23,
+                B24,
+                B25,
+                B26,
+                B27,
+                B28,
+                B29,
+                B30,
+                B31,
+                B32,
+                B33,
+                B34,
+                B35,
+                B36,
+                B37,
+                B38,
+                B39,
+                B40,
+                B41,
+                B42,
+                B43,
+                B44,
+                B45,
+                B46,
+                B47,
+                B48,
+                B49,
+                B50,
+                B51,
+                B52,
+                B53,
+                B54,
+                B55,
+                B56,
+                b5a,
+                b6a,
+                b7a,
+                b8a,
+                b9a,
+            ]
+            ret = max(collected_ratios, key=lambda item: item[1])
             ret2 = unicodedata.normalize("NFKD", ret[0])
             if title:
                 self.pdftitle = ret2.strip()
@@ -461,9 +612,9 @@ class PDFPress(object):
             else:
                 return ret2.strip()
         except (UnicodeDecodeError):
-            return (("Error", 0))
+            return ("Error", 0)
         except (IndexError):
-            return (("Error", 0))
+            return ("Error", 0)
 
     def findmajor(self):
         major_p = re.compile(r"(?<=Major:).*$|(?<=majors:).*$|(?<=Co-Majors:).*$")
@@ -472,7 +623,7 @@ class PDFPress(object):
             major_search_result = re.search(major_p, line)
             if major_search_result is not None:
                 major = major_search_result.group()
-                self.major = re.sub(sub_p, '', major.strip())
+                self.major = re.sub(sub_p, "", major.strip())
                 self.major = str(RegexpReplacer.replace(self.major))
 
         return self.major
@@ -481,11 +632,11 @@ class PDFPress(object):
         complete = False
         with open(authoritylist) as f:
             master_list = [tuple(line) for line in csv.reader(f)]
-        #self.major = lazy_encode(str(self.major))
+        # self.major = lazy_encode(str(self.major))
         best_match = process.extract(self.major, master_list, limit=1)
         # See if there are two valid majors
         try:
-            splitmajor = str(self.major).split(';')
+            splitmajor = str(self.major).split(";")
             self.firstmajor = splitmajor[0].strip()
             self.secondmajor = splitmajor[1].strip()
         except IndexError:
@@ -504,7 +655,7 @@ class PDFPress(object):
             for key, value in best_match3:
                 self.value2 = value
             if int(self.value1) + int(self.value2) == 200:
-                return self.firstmajor +"; "+ self.secondmajor
+                return self.firstmajor + "; " + self.secondmajor
             else:
                 pass
         except ValueError:
@@ -520,12 +671,21 @@ class PDFPress(object):
                 return self.major
             else:
                 while complete == False:
-                    print('----------------------------------------------------------------------------------------------')
-                    print('--Unauthorized Major-------------------------------------------------------------------------')
-                    print('-------------------------------------------------------------------------------')
-                    FNULL = open(os.devnull, 'w')
-                    self.doc = subprocess.Popen("%s %s" % (self.reader, self.path), stdout=FNULL,
-                                                stderr=subprocess.STDOUT)
+                    print(
+                        "----------------------------------------------------------------------------------------------"
+                    )
+                    print(
+                        "--Unauthorized Major-------------------------------------------------------------------------"
+                    )
+                    print(
+                        "-------------------------------------------------------------------------------"
+                    )
+                    FNULL = open(os.devnull, "w")
+                    self.doc = subprocess.Popen(
+                        "%s %s" % (self.reader, self.path),
+                        stdout=FNULL,
+                        stderr=subprocess.STDOUT,
+                    )
                     print("Unauthroized Result= " + self.major)
                     try:
                         print("Match[1]: " + str(suggested_matches[0]))
@@ -535,48 +695,48 @@ class PDFPress(object):
                         print(TypeError)
                         print(key)
                     review = input("Is there more than one major? [y|n]: ")
-                    if review == 'y' or review == 'Y':
-                        major1 = input('First Major: ')
-                        if major1 == '1':
+                    if review == "y" or review == "Y":
+                        major1 = input("First Major: ")
+                        if major1 == "1":
                             self.major1 = str(*key)
-                        elif major1 == '2':
+                        elif major1 == "2":
                             self.major1 = str(*suggested_matches[1][0])
-                        elif major1 == '3':
+                        elif major1 == "3":
                             self.major1 = str(*suggested_matches[2][0])
                         else:
                             self.major1 = major1
-                        major2 = input('Second Major: ')
-                        if major2 == '1':
+                        major2 = input("Second Major: ")
+                        if major2 == "1":
                             self.major2 = str(*key)
-                        elif major2 == '2':
+                        elif major2 == "2":
                             self.major2 = str(*suggested_matches[1][0])
-                        elif major2 == '3':
+                        elif major2 == "3":
                             self.major2 = str(*suggested_matches[2][0])
                         else:
                             self.major2 = major2
                         print(self.major1)
                         print(self.major2)
-                        confirm = input('CORRECT? [y|n]')
-                        if confirm == 'y' or confirm == 'Y':
+                        confirm = input("CORRECT? [y|n]")
+                        if confirm == "y" or confirm == "Y":
                             confirm = True
                             self.doc.kill()
                             time.sleep(1)
-                            return self.major1+"; "+ self.major2
+                            return self.major1 + "; " + self.major2
                         else:
                             continue
                     else:
                         major = input("Enter major: ")
-                        if major == '1':
+                        if major == "1":
                             self.major = str(*key)
-                        elif major == '2':
+                        elif major == "2":
                             self.major = str(*suggested_matches[1][0])
-                        elif major == '3':
+                        elif major == "3":
                             self.major = str(*suggested_matches[2][0])
                         else:
                             self.major = str(major)
                         print(self.major)
-                        confirm = input('CORRECT? [y|n]')
-                        if confirm == 'y' or confirm == 'Y':
+                        confirm = input("CORRECT? [y|n]")
+                        if confirm == "y" or confirm == "Y":
                             self.doc.kill()
                             time.sleep(1)
                             return self.major
@@ -600,7 +760,7 @@ def convert(fname, pages=None):
     converter = TextConverter(manager, output, laparams=LAParams())
     interpreter = PDFPageInterpreter(manager, converter)
 
-    infile = open(fname, 'rb')
+    infile = open(fname, "rb")
     for page in PDFPage.get_pages(infile, pagenums):
         interpreter.process_page(page)
     infile.close()
@@ -623,7 +783,7 @@ class SortDocuments(object):
         self.xml_path = os.path.join(self.path, "XML")
         self.pdf_path = os.path.join(self.path, "PDF")
         self.multi_path = os.path.join(self.path, "MultiMedia")
-        
+
     def make_folders(self):
         if not os.path.exists(self.xml_path):
             os.makedirs(self.xml_path)
@@ -636,24 +796,24 @@ class SortDocuments(object):
 
     def set_up_proquest_files(self, pq_files):
         for file in glob.glob(os.path.join(pq_files, "*")):
-            zip_ref = zipfile.ZipFile(file, 'r')
+            zip_ref = zipfile.ZipFile(file, "r")
             zip_ref.extractall(self.path)
             zip_ref.close()
-        
+
         self.make_folders()
 
         pdfs = glob.glob(os.path.join(self.path, "*.pdf"))
         xml = glob.glob(os.path.join(self.path, "*.xml"))
-        media = [x 
-                 for x 
-                 in glob.glob(os.path.join(self.path, "*/")) 
-                 if os.path.normpath(x) not in [self.multi_path, 
-                                                self.pdf_path, 
-                                                self.xml_path]]
+        media = [
+            x
+            for x in glob.glob(os.path.join(self.path, "*/"))
+            if os.path.normpath(x)
+            not in [self.multi_path, self.pdf_path, self.xml_path]
+        ]
 
         for p in pdfs:
             shutil.move(p, self.pdf_path)
-        
+
         for x in xml:
             shutil.move(x, self.xml_path)
 
@@ -661,15 +821,16 @@ class SortDocuments(object):
             shutil.move(m, self.multi_path)
 
 
-
-
 # ----------------------------------------------------------------------------------------------------------------------------
+
 
 def xmltransform(infile, xslt, outfile):
     """This function creates a command line subprocess for python to run saxon. You must have saxon installed.
     We are currently running Saxon HE, which is an open source xslt processor, and uses the .Net framework version.
     This method can be replicated using an oXygen transformation scenario, if that is more familiar."""
-    subprocess.call('Transform -s:' + infile + " " + '-xsl:' + xslt + " " + '-o:' + outfile)
+    subprocess.call(
+        "Transform -s:" + infile + " " + "-xsl:" + xslt + " " + "-o:" + outfile
+    )
 
 
 # our merge xsl does not support roottags, so this is an pythonic way of adding them after merger
@@ -678,10 +839,10 @@ def roottag(file):
     root = tree.getroot()
     # BePress uses a 'documents' root, so it makes sense to write this into the code.
     # If you need to change the rootname do so here.
-    newroot = etree.Element('documents')
+    newroot = etree.Element("documents")
     newroot.insert(0, root)
-    tree = (etree.ElementTree(tree.getroot()))
-    tree.write(file, xml_declaration=True, encoding='utf-8', method='xml')
+    tree = etree.ElementTree(tree.getroot())
+    tree.write(file, xml_declaration=True, encoding="utf-8", method="xml")
 
 
 def proquest2bepress(py_path, output_path):
@@ -704,7 +865,9 @@ def proquest2bepress(py_path, output_path):
 
     # define premises for transformation
     pq_infile = os.path.join(output_path, "XML")
-    xslt_script = os.path.join(output_path, "../Sup/ETD-ProQuestXML2bepressXML-2017.xsl")
+    xslt_script = os.path.join(
+        output_path, "../Sup/ETD-ProQuestXML2bepressXML-2017.xsl"
+    )
     be_outfile = os.path.join(output_path, "XML-Transformed")
 
     for file in glob.glob(os.path.join(pq_infile, "*.xml")):
@@ -716,6 +879,7 @@ def proquest2bepress(py_path, output_path):
 # -------------------------------------------------------------------------------------------------------------------------------
 # chext (change extension), and includesubpath (add extension)
 # Designed for more basic os needs within the workflow
+
 
 def chext(file, current_ext, desired_ext):
     try:
@@ -779,27 +943,27 @@ class Validate(object):
         try:
             self.pdffname = pdfnamelist[0]
         except IndexError:
-            self.pdffname = 'None'
+            self.pdffname = "None"
         try:
             self.pdfmname = pdfnamelist[1]
         except IndexError:
-            self.pdfmname = 'None'
+            self.pdfmname = "None"
         try:
             self.pdflname = pdfnamelist[2]
         except IndexError:
-            self.pdflname = 'None'
+            self.pdflname = "None"
         try:
             x = pdfnamelist[1]
             y = pdfnamelist[2]
             self.pdf2lname = x + " " + y
         except IndexError:
-            self.pdf2name = 'None'
+            self.pdf2name = "None"
         try:
             ma = pdfnamelist[2]
             mb = pdfnamelist[3]
             self.pdf2mname = ma + " " + mb
         except IndexError:
-            self.pdf2mname = 'None'
+            self.pdf2mname = "None"
 
         fname_score = fuzz.ratio(str(self.pdffname).strip(), fname)
         mname_score = fuzz.ratio(str(self.pdfmname).strip(), mname)
@@ -808,7 +972,6 @@ class Validate(object):
         pdf2lname_score = fuzz.ratio(str(self.pdf2lname).strip(), lname)
         pdf2mname_score = fuzz.ratio(str(self.pdf2mname).strip(), mname)
         permissive_score = fuzz.ratio(str(self.pdf).strip(), author)
-
 
         if fname_score + mname_score + lname_score == 300:
             self.validauthor = True
@@ -834,17 +997,24 @@ class Validate(object):
 
     def titleresolve(self):
         if self.valid == False:
-            print('---------------------------------------------------------------------------------------------------')
+            print(
+                "---------------------------------------------------------------------------------------------------"
+            )
             print("TITLE needs to be validated: ")
             # y = raw_input(
             #   "-----------------------------------------Open PDF? [y|n] ----------------------------------------- ")
             # Uncomment above section to provide choice of opening PDF
-            print('--------------------------------------------------------------------------------------------------')
-            y = 'Y'
-            if y == 'y' or y == 'Y':
-                FNULL = open(os.devnull, 'w')
-                self.doc = subprocess.Popen("%s %s" % (self.pdfreader, self.pdfpath), stdout=FNULL,
-                                            stderr=subprocess.STDOUT)
+            print(
+                "--------------------------------------------------------------------------------------------------"
+            )
+            y = "Y"
+            if y == "y" or y == "Y":
+                FNULL = open(os.devnull, "w")
+                self.doc = subprocess.Popen(
+                    "%s %s" % (self.pdfreader, self.pdfpath),
+                    stdout=FNULL,
+                    stderr=subprocess.STDOUT,
+                )
             else:
                 pass
             cont = True
@@ -854,16 +1024,16 @@ class Validate(object):
                 print("---PDF Field [2]: " + self.pdf)
                 print("---Your Field: " + self.cor)
                 var = input("Enter your correction: ")
-                if var == '1':
+                if var == "1":
                     self.cor = self.xml
-                elif var == '2':
+                elif var == "2":
                     self.cor = self.pdf
                 else:
                     self.cor = var
 
                 print(self.cor)
-                correction = input('Are you happy with this change? [y|n]')
-                if correction == 'y' or correction == 'Y':
+                correction = input("Are you happy with this change? [y|n]")
+                if correction == "y" or correction == "Y":
                     cont = False
                     if self.cor == self.xml:
                         try:
@@ -889,26 +1059,33 @@ class Validate(object):
             try:
                 self.fname = str(fname)
             except UnicodeEncodeError:
-                self.fname = 'ERROR'
+                self.fname = "ERROR"
             try:
                 self.mname = str(mname)
             except UnicodeEncodeError:
-                self.mname = 'ERROR'
+                self.mname = "ERROR"
             try:
                 self.lname = str(lname)
             except UnicodeEncodeError:
-                self.lname = 'ERROR'
-            print("------------------------------------------------------------------------------------------------")
+                self.lname = "ERROR"
+            print(
+                "------------------------------------------------------------------------------------------------"
+            )
             print("AUTHOR needs to be validated: ")
             # y = raw_input(
             #    "-----------------------------------------Open PDF? [y|n] ----------------------------------------- ")
             # Uncomment above to provide option for opening PDF
-            print("------------------------------------------------------------------------------------------------")
+            print(
+                "------------------------------------------------------------------------------------------------"
+            )
             y = "y"
-            if y == 'y' or y == 'Y':
-                FNULL = open(os.devnull, 'w')
-                self.doc = subprocess.Popen("%s %s" % (self.pdfreader, self.pdfpath), stdout=FNULL,
-                                            stderr=subprocess.STDOUT)
+            if y == "y" or y == "Y":
+                FNULL = open(os.devnull, "w")
+                self.doc = subprocess.Popen(
+                    "%s %s" % (self.pdfreader, self.pdfpath),
+                    stdout=FNULL,
+                    stderr=subprocess.STDOUT,
+                )
             else:
                 pass
             cont = True
@@ -921,41 +1098,41 @@ class Validate(object):
                 fname = input("FirstName: ")
                 mname = input("MiddleName: ")
                 lname = input("LastName: ")
-                if fname == '1':
+                if fname == "1":
                     self.fname = self.fname
-                elif fname == '2':
+                elif fname == "2":
                     self.fname = self.mname
-                elif fname == '3':
+                elif fname == "3":
                     self.fname = lname
-                elif fname == 'quit':
+                elif fname == "quit":
                     self.doc.kill()
                     time.sleep(1)
                     return None
                 else:
                     self.fname = fname
 
-                if mname == '1':
+                if mname == "1":
                     self.mname = self.fname
-                elif mname == '2':
+                elif mname == "2":
                     self.mname = self.mname
-                elif mname == '3':
+                elif mname == "3":
                     self.mname = lname
                 else:
                     self.mname = mname
 
-                if lname == '1':
+                if lname == "1":
                     self.lname = self.fname
-                elif lname == '2':
+                elif lname == "2":
                     self.lname = self.mname
-                elif lname == '3':
+                elif lname == "3":
                     self.lname = self.lname
                 else:
                     self.lname = lname
 
                 print(self.fname, self.mname, self.lname)
 
-                correction = input('Are you happy with this change? [y|n]')
-                if correction == 'y' or correction == 'Y':
+                correction = input("Are you happy with this change? [y|n]")
+                if correction == "y" or correction == "Y":
                     self.doc.kill()
                     time.sleep(1)
                     cont = False
