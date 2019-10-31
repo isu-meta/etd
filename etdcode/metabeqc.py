@@ -828,9 +828,9 @@ def xmltransform(infile, xslt, outfile):
     """This function creates a command line subprocess for python to run saxon. You must have saxon installed.
     We are currently running Saxon HE, which is an open source xslt processor, and uses the .Net framework version.
     This method can be replicated using an oXygen transformation scenario, if that is more familiar."""
-    subprocess.call(
-        "Transform -s:" + infile + " " + "-xsl:" + xslt + " " + "-o:" + outfile
-    )
+
+    call = f'Transform -s:"{infile}" -xsl:"{xslt}" -o:"{outfile}"'
+    subprocess.call(call)
 
 
 # our merge xsl does not support roottags, so this is an pythonic way of adding them after merger
